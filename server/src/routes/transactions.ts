@@ -25,10 +25,11 @@ router.use(requireAuth);
 router.get('/', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const userId = req.user!.id;
-    const transactions = await StoreService.getTransactions(userId);
-
-    // Apply query filters if provided
-    const { type, category, search, startDate, endDate } = req.query;
+    const { type, category, search, startDate, endDate, since } = req.query;
+    const transactions = await StoreService.getTransactions(
+      userId,
+      typeof since === 'string' ? since : undefined
+    );
 
     let filtered = transactions;
 

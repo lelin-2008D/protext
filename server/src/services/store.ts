@@ -9,13 +9,19 @@ const memoryCategories = new Map<string, Category[]>();
 
 export class StoreService {
   // TRANSACTIONS
-  static async getTransactions(userId: string): Promise<Transaction[]> {
+  static async getTransactions(userId: string, since?: string): Promise<Transaction[]> {
     const supabase = getSupabaseAdmin();
     if (supabase) {
-      const { data, error } = await supabase
+      let query = supabase
         .from('transactions')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', userId);
+
+      if (since) {
+        query = query.gt('updated_at', since);
+      }
+
+      const { data, error } = await query
         .order('date', { ascending: false })
         .order('created_at', { ascending: false });
 
@@ -28,7 +34,11 @@ export class StoreService {
     }
 
     // Memory fallback
-    return memoryTransactions.get(userId) || [];
+    let list = memoryTransactions.get(userId) || [];
+    if (since) {
+      list = list.filter(t => (t.updated_at || '') > since);
+    }
+    return list;
   }
 
   static async getTransactionById(userId: string, id: string): Promise<Transaction | null> {

@@ -49,11 +49,12 @@ export class ApiService {
   }
 
   // Transactions
-  static async getTransactions(params?: { type?: string; category?: string; search?: string }): Promise<Transaction[]> {
+  static async getTransactions(params?: { type?: string; category?: string; search?: string; since?: string }): Promise<Transaction[]> {
     const query = new URLSearchParams();
     if (params?.type) query.set('type', params.type);
     if (params?.category) query.set('category', params.category);
     if (params?.search) query.set('search', params.search);
+    if (params?.since) query.set('since', params.since);
 
     const url = `${API_BASE}/api/transactions${query.toString() ? `?${query.toString()}` : ''}`;
     const res = await fetch(url, {

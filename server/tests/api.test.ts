@@ -191,4 +191,42 @@ describe('HISAB Backend API Endpoints', () => {
     expect(Array.isArray(res.body.data)).toBe(true);
     expect(res.body.data.length).toBeGreaterThan(5);
   });
+
+  it('supports delta sync with since query parameter', async () => {
+    const userToken = 'Bearer mock-user-delta';
+
+    // 1. Create initial transaction
+    await request(app)
+      .post('/api/transactions')
+      .set('Authorization', userToken)
+      .send({
+        type: 'expense',
+        amount: 100,
+        description: 'First Coffee'
+      });
+
+    const checkpoint = new Date().toISOString();
+
+    // Small delay to ensure timestamp difference
+    await new Promise(r => setTimeout(r, 20));
+
+    // 2. Create second transaction after checkpoint
+    await request(app)
+      .post('/api/transactions')
+      .set('Authorization', userToken)
+      .send({
+        type: 'expense',
+        amount: 200,
+        description: 'Second Coffee'
+      });
+
+    // 3. Query delta with since=checkpoint
+    const deltaRes = await request(app)
+      .get(`/api/transactions?since=${encodeURIComponent(checkpoint)}`)
+      .set('Authorization', userToken);
+
+    expect(deltaRes.status).toBe(200);
+    expect(deltaRes.body.data.length).toBe(1);
+    expect(deltaRes.body.data[0].description).toBe('Second Coffee');
+  });
 });
