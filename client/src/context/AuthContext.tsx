@@ -7,6 +7,8 @@ interface AuthContextType {
   user: UserProfile | null;
   loading: boolean;
   isGuest: boolean;
+  signInWithPassword: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signUpWithPassword: (email: string, password: string, name?: string) => Promise<{ success: boolean; error?: string }>;
   signInWithEmail: (email: string) => Promise<{ success: boolean; error?: string }>;
   signUpWithEmail: (email: string, name?: string) => Promise<{ success: boolean; error?: string }>;
   continueAsGuest: () => void;
@@ -161,9 +163,104 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     ApiService.setAuthToken(`mock-user-${guestUser.id}`);
   };
 
+  const signInWithPassword = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !password) {
+      return { success: false, error: 'Email and password are required' };
+    }
+
+    if (!isSupabaseConfigured || !supabase) {
+      const mockUser: UserProfile = {
+        id: 'user-' + cleanEmail.replace(/[^a-zA-Z0-9]/g, '-'),
+        email: cleanEmail,
+        name: cleanEmail.split('@')[0]
+      };
+      const token = `mock-user-${mockUser.id}`;
+      saveAuthSession(mockUser, false, token);
+      setUser(mockUser);
+      setIsGuest(false);
+      ApiService.setAuthToken(token);
+      return { success: true };
+    }
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      if (data.user) {
+        const userProfile: UserProfile = {
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.user_metadata?.full_name || data.user.email?.split('@')[0] || 'User'
+        };
+        setUser(userProfile);
+        setIsGuest(false);
+        if (data.session) {
+          ApiService.setAuthToken(data.session.access_token);
+          saveAuthSession(userProfile, false, data.session.access_token);
+        }
+      }
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Login failed' };
+    }
+  };
+
+  const signUpWithPassword = async (email: string, password: string, name?: string): Promise<{ success: boolean; error?: string }> => {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !password) {
+      return { success: false, error: 'Email and password are required' };
+    }
+    if (password.length < 6) {
+      return { success: false, error: 'Password must be at least 6 characters long' };
+    }
+
+    if (!isSupabaseConfigured || !supabase) {
+      return signInWithPassword(email, password);
+    }
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: cleanEmail,
+        password,
+        options: {
+          data: {
+            full_name: name || cleanEmail.split('@')[0]
+          }
+        }
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      if (data.user) {
+        const userProfile: UserProfile = {
+          id: data.user.id,
+          email: data.user.email,
+          name: name || data.user.user_metadata?.full_name || data.user.email?.split('@')[0] || 'User'
+        };
+        setUser(userProfile);
+        setIsGuest(false);
+        if (data.session) {
+          ApiService.setAuthToken(data.session.access_token);
+          saveAuthSession(userProfile, false, data.session.access_token);
+        }
+      }
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Sign up failed' };
+    }
+  };
+
   const signInWithEmail = async (email: string): Promise<{ success: boolean; error?: string }> => {
     if (!isSupabaseConfigured || !supabase) {
-      // Sandbox / local mode email authentication
       const cleanEmail = email.trim().toLowerCase();
       const mockUser: UserProfile = {
         id: 'user-' + cleanEmail.replace(/[^a-zA-Z0-9]/g, '-'),
@@ -220,6 +317,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         loading,
         isGuest,
+        signInWithPassword,
+        signUpWithPassword,
         signInWithEmail,
         signUpWithEmail,
         continueAsGuest,
