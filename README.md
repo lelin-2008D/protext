@@ -142,10 +142,35 @@ npm --prefix client test
 
 ---
 
-## 🚢 Deployment
+## 🚢 How to Deploy to GitHub Pages
 
-### Frontend (GitHub Pages)
-The repository includes a GitHub Actions workflow in `.github/workflows/deploy.yml`. When you push to `main`, GitHub Actions automatically compiles the Vite frontend and publishes it to GitHub Pages.
+### Option A: 1-Command Deploy (via `gh-pages`)
+1. In your project root, run:
+   ```bash
+   npm run deploy
+   ```
+   This will automatically build the production client and push it to the `gh-pages` branch on your GitHub repository.
 
-### Backend
+2. In your GitHub repository:
+   - Go to **Settings** ➔ **Pages**.
+   - Under **Branch**, select `gh-pages` and folder `/ (root)`.
+   - Click **Save**.
+   - Your app will be live at: `https://<username>.github.io/<repo-name>/`
+
+---
+
+### Option B: Push Source Code to GitHub
+1. Stage and commit your changes:
+   ```bash
+   git add .
+   git commit -m "feat: update HISAB"
+   ```
+2. Push to your repository:
+   ```bash
+   git push origin master
+   ```
+
+---
+
+## ☁️ Backend Deployment
 Deploy the `server/` directory to any Node.js hosting platform (e.g. Render, Railway, Fly.io, or VPS) and configure `VITE_API_BASE_URL` on the frontend.
