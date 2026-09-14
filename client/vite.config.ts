@@ -2,15 +2,17 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
+// Support GitHub Pages repository path (/protext/) or relative path
+const base = process.env.GITHUB_ACTIONS || process.env.NODE_ENV === 'production' ? '/protext/' : '/';
+
 // https://vitejs.dev/config/
 export default defineConfig({
-  // Use relative base for flexible GitHub Pages or standalone hosting
-  base: './',
+  base,
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg', 'icons/*.png'],
+      includeAssets: ['favicon.svg', 'icons/*.png'],
       manifest: {
         name: 'HISAB - Personal Money Tracker',
         short_name: 'HISAB',
@@ -19,8 +21,8 @@ export default defineConfig({
         background_color: '#F8FAFC',
         display: 'standalone',
         orientation: 'portrait',
-        scope: './',
-        start_url: './',
+        scope: base,
+        start_url: base,
         icons: [
           {
             src: 'icons/icon-192x192.png',
