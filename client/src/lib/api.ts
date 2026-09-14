@@ -100,9 +100,13 @@ export class ApiService {
   static async createTransaction(tx: Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<Transaction> {
     if (isSupabaseConfigured && supabase) {
       const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        // Guest mode: transaction is saved in local IndexedDB
+        return tx as Transaction;
+      }
       const payload = {
         ...tx,
-        user_id: user?.id || (tx as any).user_id
+        user_id: user.id
       };
       const { data, error } = await supabase.from('transactions').insert([payload]).select().single();
       if (error) throw new Error(error.message);
@@ -124,6 +128,10 @@ export class ApiService {
 
   static async updateTransaction(id: string, updates: Partial<Transaction>): Promise<Transaction> {
     if (isSupabaseConfigured && supabase) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return { id, ...updates } as Transaction;
+      }
       const { data, error } = await supabase.from('transactions').update(updates).eq('id', id).select().single();
       if (error) throw new Error(error.message);
       return data;
@@ -144,6 +152,10 @@ export class ApiService {
 
   static async deleteTransaction(id: string): Promise<void> {
     if (isSupabaseConfigured && supabase) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return;
+      }
       const { error } = await supabase.from('transactions').delete().eq('id', id);
       if (error) throw new Error(error.message);
       return;
@@ -164,7 +176,9 @@ export class ApiService {
   static async getSettings(): Promise<UserSettings> {
     if (isSupabaseConfigured && supabase) {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      if (!user) {
+        return { user_id: 'guest', starting_balance: 0, currency: 'NPR', theme: 'light' };
+      }
       const { data, error } = await supabase.from('settings').select('*').eq('user_id', user.id).single();
       if (error && error.code !== 'PGRST116') throw new Error(error.message);
       return data || { user_id: user.id, starting_balance: 0, currency: 'NPR', theme: 'light' };
@@ -185,7 +199,10 @@ export class ApiService {
   static async updateSettings(updates: Partial<UserSettings>): Promise<UserSettings> {
     if (isSupabaseConfigured && supabase) {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      if (!user) {
+        // Guest mode: settings are saved locally in IndexedDB / localStorage
+        return updates as UserSettings;
+      }
       const { data, error } = await supabase.from('settings').upsert({
         ...updates,
         user_id: user.id
@@ -230,9 +247,12 @@ export class ApiService {
   static async createCategory(cat: Omit<Category, 'id' | 'user_id'>): Promise<Category> {
     if (isSupabaseConfigured && supabase) {
       const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return cat as Category;
+      }
       const payload = {
         ...cat,
-        user_id: user?.id
+        user_id: user.id
       };
       const { data, error } = await supabase.from('categories').insert([payload]).select().single();
       if (error) throw new Error(error.message);
