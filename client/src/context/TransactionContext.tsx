@@ -44,19 +44,73 @@ interface TransactionContextType {
 
 const TransactionContext = createContext<TransactionContextType | undefined>(undefined);
 
+const THEME_STORAGE_KEY = 'hisab_theme';
+
+const getInitialTheme = (): 'light' | 'dark' | 'system' => {
+  try {
+    const saved = localStorage.getItem(THEME_STORAGE_KEY);
+    if (saved === 'dark' || saved === 'light' || saved === 'system') {
+      return saved;
+    }
+  } catch {
+    // ignore
+  }
+  return 'system';
+};
+
+const applyThemeToDOM = (theme: 'light' | 'dark' | 'system') => {
+  if (typeof document === 'undefined') return;
+  if (theme === 'dark') {
+    document.documentElement.classList.add('dark');
+  } else if (theme === 'light') {
+    document.documentElement.classList.remove('dark');
+  } else {
+    // system preference
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }
+};
+
 export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const { isOnline, triggerSync } = useSync();
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CLIENT_CATEGORIES);
-  const [settings, setSettings] = useState<UserSettings>({
+  const [settings, setSettings] = useState<UserSettings>(() => ({
     user_id: user?.id || 'guest',
     starting_balance: 0,
     currency: 'NPR',
-    theme: 'light'
-  });
+    theme: getInitialTheme()
+  }));
   const [loading, setLoading] = useState(true);
+
+  // Apply initial theme immediately
+  useEffect(() => {
+    applyThemeToDOM(settings.theme);
+  }, []);
+
+  // Theme change listener & system watcher
+  useEffect(() => {
+    applyThemeToDOM(settings.theme);
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, settings.theme);
+    } catch {
+      // ignore
+    }
+
+    if (settings.theme === 'system' && window.matchMedia) {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const handleSystemThemeChange = () => {
+        applyThemeToDOM('system');
+      };
+      mediaQuery.addEventListener('change', handleSystemThemeChange);
+      return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
+    }
+  }, [settings.theme]);
 
   // Load initial data from local DB and remote API
   const loadData = useCallback(async () => {
@@ -68,11 +122,15 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
       const localTxs = await getLocalTransactions(user.id);
       const localSet = await getLocalSettings(user.id);
 
-      if (localTxs.length > 0) {
+      if (localTxs && localTxs.length > 0) {
         setTransactions(localTxs);
       }
       if (localSet) {
-        setSettings(localSet);
+        // Preserve saved theme if localSet doesn't override it with valid value
+        const currentTheme = getInitialTheme();
+        const resolvedTheme = localSet.theme || currentTheme;
+        setSettings({ ...localSet, theme: resolvedTheme });
+        applyThemeToDOM(resolvedTheme);
       }
 
       // 2. If online, fetch fresh data from API
@@ -89,8 +147,11 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
             await saveLocalTransactions(remoteTxs);
           }
           if (remoteSet) {
-            setSettings(remoteSet);
-            await saveLocalSettings(remoteSet);
+            const currentTheme = getInitialTheme();
+            const resolvedTheme = remoteSet.theme || currentTheme;
+            setSettings({ ...remoteSet, theme: resolvedTheme });
+            applyThemeToDOM(resolvedTheme);
+            await saveLocalSettings({ ...remoteSet, theme: resolvedTheme });
           }
           if (remoteCats && remoteCats.length > 0) {
             setCategories(remoteCats);
@@ -109,22 +170,6 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
   useEffect(() => {
     loadData();
   }, [loadData]);
-
-  // Apply theme to document
-  useEffect(() => {
-    if (settings.theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else if (settings.theme === 'light') {
-      document.documentElement.classList.remove('dark');
-    } else {
-      // System theme
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    }
-  }, [settings.theme]);
 
   // RECALCULATE BALANCES (Single Reliable Source of Truth - Formula in Requirement 16)
   const startingBalance = settings.starting_balance || 0;
@@ -347,20 +392,28 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   // ACTION: Update Theme
   const updateTheme = async (theme: 'light' | 'dark' | 'system'): Promise<void> => {
-    if (!user) return;
+    applyThemeToDOM(theme);
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, theme);
+    } catch {
+      // ignore
+    }
+
     const newSettings: UserSettings = {
       ...settings,
       theme
     };
 
     setSettings(newSettings);
-    await saveLocalSettings(newSettings);
 
-    if (isOnline) {
-      try {
-        await ApiService.updateSettings({ theme });
-      } catch {
-        // ignore
+    if (user) {
+      await saveLocalSettings(newSettings);
+      if (isOnline) {
+        try {
+          await ApiService.updateSettings({ theme });
+        } catch {
+          // ignore
+        }
       }
     }
   };

@@ -13,8 +13,16 @@ interface AuthContextType {
   signOut: () => Promise<void>;
 }
 
+interface StoredSession {
+  user: UserProfile;
+  isGuest: boolean;
+  token: string;
+  createdAt: number;
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const AUTH_SESSION_KEY = 'hisab_auth_session';
 const GUEST_STORAGE_KEY = 'hisab_guest_user';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -23,24 +31,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isGuest, setIsGuest] = useState(false);
 
   useEffect(() => {
-    // 1. Check if Supabase session exists
-    if (isSupabaseConfigured && supabase) {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session?.user) {
-          const userProfile: UserProfile = {
-            id: session.user.id,
-            email: session.user.email,
-            name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User'
-          };
-          setUser(userProfile);
-          setIsGuest(false);
-          ApiService.setAuthToken(session.access_token);
-        } else {
-          checkGuestSession();
+    const initializeAuth = async () => {
+      try {
+        // 1. Check if Supabase session exists
+        if (isSupabaseConfigured && supabase) {
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+              const userProfile: UserProfile = {
+                id: session.user.id,
+                email: session.user.email,
+                name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User'
+              };
+              setUser(userProfile);
+              setIsGuest(false);
+              ApiService.setAuthToken(session.access_token);
+              saveAuthSession(userProfile, false, session.access_token);
+              setLoading(false);
+              return;
+            }
+          } catch (supaErr) {
+            console.warn('[AuthContext] Error reading Supabase session:', supaErr);
+          }
         }
-        setLoading(false);
-      });
 
+        // 2. Check for locally persisted authenticated session
+        const storedAuth = getStoredAuthSession();
+        if (storedAuth && !storedAuth.isGuest && storedAuth.user?.id) {
+          setUser(storedAuth.user);
+          setIsGuest(false);
+          ApiService.setAuthToken(storedAuth.token);
+          setLoading(false);
+          return;
+        }
+
+        // 3. Fallback to guest session
+        restoreOrCreateGuestSession();
+      } catch (err) {
+        console.error('[AuthContext] Initialization error:', err);
+        restoreOrCreateGuestSession();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    // Supabase auth state change listener
+    if (isSupabaseConfigured && supabase) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
         if (session?.user) {
           const userProfile: UserProfile = {
@@ -51,44 +89,73 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(userProfile);
           setIsGuest(false);
           ApiService.setAuthToken(session.access_token);
-        } else {
-          checkGuestSession();
+          saveAuthSession(userProfile, false, session.access_token);
+        } else if (_event === 'SIGNED_OUT') {
+          localStorage.removeItem(AUTH_SESSION_KEY);
+          restoreOrCreateGuestSession();
         }
       });
 
       return () => {
         subscription.unsubscribe();
       };
-    } else {
-      // Standalone / local sandbox mode
-      checkGuestSession();
-      setLoading(false);
     }
   }, []);
 
-  const checkGuestSession = () => {
-    const saved = localStorage.getItem(GUEST_STORAGE_KEY);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setUser(parsed);
-        setIsGuest(true);
-        ApiService.setAuthToken(`mock-user-${parsed.id}`);
-      } catch {
-        initDefaultGuest();
-      }
-    } else {
-      initDefaultGuest();
+  const saveAuthSession = (userProfile: UserProfile, guest: boolean, token: string) => {
+    try {
+      const sessionData: StoredSession = {
+        user: userProfile,
+        isGuest: guest,
+        token,
+        createdAt: Date.now()
+      };
+      localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(sessionData));
+    } catch (e) {
+      console.warn('[AuthContext] Failed to save auth session to localStorage:', e);
     }
   };
 
-  const initDefaultGuest = () => {
+  const getStoredAuthSession = (): StoredSession | null => {
+    try {
+      const raw = localStorage.getItem(AUTH_SESSION_KEY);
+      if (!raw) return null;
+      const parsed: StoredSession = JSON.parse(raw);
+      if (parsed && parsed.user && typeof parsed.isGuest === 'boolean') {
+        return parsed;
+      }
+    } catch {
+      localStorage.removeItem(AUTH_SESSION_KEY);
+    }
+    return null;
+  };
+
+  const restoreOrCreateGuestSession = () => {
+    try {
+      const saved = localStorage.getItem(GUEST_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.id) {
+          setUser(parsed);
+          setIsGuest(true);
+          ApiService.setAuthToken(`mock-user-${parsed.id}`);
+          return;
+        }
+      }
+    } catch {
+      // ignore
+    }
+
     const guestUser: UserProfile = {
       id: 'guest-' + Math.random().toString(36).substring(2, 8),
       name: 'Guest User',
       email: 'guest@hisab.local'
     };
-    localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(guestUser));
+    try {
+      localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(guestUser));
+    } catch {
+      // ignore
+    }
     setUser(guestUser);
     setIsGuest(true);
     ApiService.setAuthToken(`mock-user-${guestUser.id}`);
@@ -96,22 +163,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithEmail = async (email: string): Promise<{ success: boolean; error?: string }> => {
     if (!isSupabaseConfigured || !supabase) {
-      // Mock login for demo mode
+      // Sandbox / local mode email authentication
+      const cleanEmail = email.trim().toLowerCase();
       const mockUser: UserProfile = {
-        id: 'user-' + email.replace(/[^a-zA-Z0-9]/g, '-'),
-        email,
-        name: email.split('@')[0]
+        id: 'user-' + cleanEmail.replace(/[^a-zA-Z0-9]/g, '-'),
+        email: cleanEmail,
+        name: cleanEmail.split('@')[0]
       };
-      localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(mockUser));
+      const token = `mock-user-${mockUser.id}`;
+      saveAuthSession(mockUser, false, token);
       setUser(mockUser);
       setIsGuest(false);
-      ApiService.setAuthToken(`mock-user-${mockUser.id}`);
+      ApiService.setAuthToken(token);
       return { success: true };
     }
 
     try {
       const { error } = await supabase.auth.signInWithOtp({
-        email,
+        email: email.trim().toLowerCase(),
         options: {
           emailRedirectTo: window.location.origin
         }
@@ -128,15 +197,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const continueAsGuest = () => {
-    initDefaultGuest();
+    localStorage.removeItem(AUTH_SESSION_KEY);
+    restoreOrCreateGuestSession();
   };
 
   const signOut = async () => {
-    if (isSupabaseConfigured && supabase) {
-      await supabase.auth.signOut();
+    try {
+      if (isSupabaseConfigured && supabase) {
+        await supabase.auth.signOut();
+      }
+    } catch (e) {
+      console.warn('[AuthContext] Supabase signOut error:', e);
     }
-    localStorage.removeItem(GUEST_STORAGE_KEY);
-    initDefaultGuest();
+    localStorage.removeItem(AUTH_SESSION_KEY);
+    restoreOrCreateGuestSession();
   };
 
   return (

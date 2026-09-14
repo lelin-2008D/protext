@@ -5,6 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>HISAB - Personal Money Tracker</title>
 
+    <!-- Theme Initialization (Prevents flash of light/dark theme on page load) -->
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('hisab_theme');
+          var systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (saved === 'dark' || (saved === 'system' && systemDark) || (!saved && systemDark)) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
+
     <!-- Meta Description & Theme -->
     <meta name="description" content="Simple personal money tracker for Nepal with natural language input" />
     <meta name="theme-color" content="#2563EB" />
