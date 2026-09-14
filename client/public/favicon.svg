@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="hisabGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB" />
+      <stop offset="100%" stop-color="#1D4ED8" />
+    </linearGradient>
+  </defs>
+  <!-- Background Rounded Rect -->
+  <rect width="512" height="512" rx="115" fill="url(#hisabGrad)" />
+  
+  <!-- Modern Nepal Currency / Rupee & Wallet Symbol -->
+  <g fill="none" stroke="#FFFFFF" stroke-width="36" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Wallet Card / Symbol -->
+    <path d="M120 180 h272 a40 40 0 0 1 40 40 v160 a40 40 0 0 1 -40 40 h-272 a40 40 0 0 1 -40 -40 v-160 a40 40 0 0 1 40 -40 z" fill="#1E40AF" fill-opacity="0.3" />
+    <!-- Flap -->
+    <path d="M140 180 v-40 a40 40 0 0 1 40 -40 h152 a40 40 0 0 1 40 40 v40" />
+    <!-- Stylized Rupee / "H" Symbol inside -->
+    <path d="M200 250 v110" stroke-width="40" />
+    <path d="M312 250 v110" stroke-width="40" />
+    <path d="M200 305 h112" stroke-width="36" />
+    <path d="M175 250 h162" stroke-width="32" />
+  </g>
+</svg>

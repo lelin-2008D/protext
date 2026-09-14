@@ -1,0 +1,17 @@
+{
+  "short_name": "HISAB",
+  "name": "HISAB - Personal Money Tracker",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512"
+    }
+  ],
+  "start_url": "./",
+  "background_color": "#F8FAFC",
+  "theme_color": "#2563EB",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "./"
+}
