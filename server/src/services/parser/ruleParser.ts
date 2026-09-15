@@ -147,12 +147,14 @@ export const DEFAULT_CATEGORIES: Category[] = [
 const INCOME_INDICATORS = [
   'received', 'salary', 'earned', 'got', 'income', 'payment received', 'client paid',
   'refund', 'dad gave', 'mom gave', 'baba gave', 'aama gave', 'brother gave', 'sister gave',
-  'cashback', 'bonus', 'sold', 'credited', 'from freelancing', 'from client', 'gift', 'dakshina'
+  'cashback', 'bonus', 'sold', 'credited', 'from freelancing', 'from client', 'gift', 'dakshina',
+  'talab', 'kamai', 'aamdani', 'bhatta', 'pension', 'stipend'
 ];
 
 const EXPENSE_INDICATORS = [
   'paid', 'spent', 'bought', 'purchase', 'purchased', 'expense', 'bill', 'fare',
-  'debited', 'for', 'kharcha', 'khana', 'eating', 'ordered', 'took', 'cost'
+  'debited', 'for', 'kharcha', 'khana', 'eating', 'ordered', 'took', 'cost',
+  'tireko', 'kineko', 'bujhaye', 'tiro', 'kino'
 ];
 
 export class RuleParser {
@@ -181,14 +183,14 @@ export class RuleParser {
 
     const lower = rawInput.toLowerCase();
 
-    // 1. Extract Amount
-    const amountExtraction = this.extractAmount(rawInput);
-    const amount = amountExtraction.amount;
-    const amountMatchText = amountExtraction.matchedText;
-
-    // 2. Extract Date (e.g. "yesterday", "today", "2025-01-20")
+    // 1. Extract Date first (e.g. "yesterday", "hijo", "today", "aaja", "2025-01-20")
     const dateExtraction = this.extractDate(rawInput);
     const date = dateExtraction.date;
+
+    // 2. Extract Amount (ignoring any matched date string so years like 2025 are not mistaken for amounts)
+    const amountExtraction = this.extractAmount(rawInput, dateExtraction.matchedText);
+    const amount = amountExtraction.amount;
+    const amountMatchText = amountExtraction.matchedText;
 
     // 3. Determine Type (income vs expense)
     const typeExtraction = this.detectType(lower);
@@ -243,7 +245,12 @@ export class RuleParser {
     };
   }
 
-  private extractAmount(input: string): { amount: number; matchedText: string } {
+  private extractAmount(input: string, dateMatchText?: string): { amount: number; matchedText: string } {
+    let sanitized = input;
+    if (dateMatchText) {
+      sanitized = sanitized.replace(dateMatchText, ' ');
+    }
+
     // Regex patterns for Nepali / English amounts:
     // "Rs 120", "Rs. 120", "Rs.120", "NPR 120", "NPR. 120", "120 rupees", "120 rs", "120/-", "1,200", "15k", "25 k"
     const patterns = [
@@ -255,7 +262,7 @@ export class RuleParser {
     ];
 
     for (const pattern of patterns) {
-      const match = input.match(pattern);
+      const match = sanitized.match(pattern);
       if (match) {
         const fullMatch = match[0];
         let numStr = (match[1] || match[0]).toLowerCase().replace(/,/g, '').trim();
@@ -282,22 +289,36 @@ export class RuleParser {
     const today = new Date();
     const lower = input.toLowerCase();
 
-    // Check for "yesterday"
-    if (/\byesterday\b/i.test(lower)) {
+    // Check for "yesterday" or Nepali "hijo"
+    const yesterdayMatch = lower.match(/\b(yesterday|hijo)\b/i);
+    if (yesterdayMatch) {
       const d = new Date(today);
       d.setDate(d.getDate() - 1);
-      return { date: d.toISOString().split('T')[0], matchedText: 'yesterday' };
+      return { date: d.toISOString().split('T')[0], matchedText: yesterdayMatch[0] };
     }
 
-    // Check for "today"
-    if (/\btoday\b/i.test(lower)) {
-      return { date: today.toISOString().split('T')[0], matchedText: 'today' };
+    // Check for "today" or Nepali "aaja"
+    const todayMatch = lower.match(/\b(today|aaja)\b/i);
+    if (todayMatch) {
+      return { date: today.toISOString().split('T')[0], matchedText: todayMatch[0] };
     }
 
-    // Check for explicit YYYY-MM-DD or DD/MM/YYYY
-    const ymdMatch = input.match(/\b(\d{4})-(\d{2})-(\d{2})\b/);
+    // Check for explicit YYYY-MM-DD or YYYY/MM/DD
+    const ymdMatch = input.match(/\b(\d{4})[-/](\d{1,2})[-/](\d{1,2})\b/);
     if (ymdMatch) {
-      return { date: ymdMatch[0], matchedText: ymdMatch[0] };
+      const y = ymdMatch[1];
+      const m = ymdMatch[2].padStart(2, '0');
+      const d = ymdMatch[3].padStart(2, '0');
+      return { date: `${y}-${m}-${d}`, matchedText: ymdMatch[0] };
+    }
+
+    // Check for explicit DD/MM/YYYY or DD-MM-YYYY
+    const dmyMatch = input.match(/\b(\d{1,2})[-/](\d{1,2})[-/](\d{4})\b/);
+    if (dmyMatch) {
+      const d = dmyMatch[1].padStart(2, '0');
+      const m = dmyMatch[2].padStart(2, '0');
+      const y = dmyMatch[3];
+      return { date: `${y}-${m}-${d}`, matchedText: dmyMatch[0] };
     }
 
     return { date: today.toISOString().split('T')[0], matchedText: '' };

@@ -43,4 +43,36 @@ describe('Client Local Parser', () => {
     expect(res.type).toBe('income');
     expect(res.category).toBe('Freelance');
   });
+
+  it('correctly isolates date when date precedes amount', () => {
+    const res = parseLocalInput('2025-01-20 Petrol 500');
+    expect(res.amount).toBe(500);
+    expect(res.date).toBe('2025-01-20');
+    expect(res.category).toBe('Transport');
+    expect(res.type).toBe('expense');
+  });
+
+  it('correctly parses Romanized Nepali date keywords "hijo" and "aaja"', () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yStr = yesterday.toISOString().split('T')[0];
+
+    const resHijo = parseLocalInput('Hijo momo 200');
+    expect(resHijo.amount).toBe(200);
+    expect(resHijo.date).toBe(yStr);
+
+    const resAaja = parseLocalInput('Aaja chiya 30');
+    expect(resAaja.amount).toBe(30);
+    expect(resAaja.date).toBe(new Date().toISOString().split('T')[0]);
+  });
+
+  it('correctly parses Nepali income terms like "talab" and "kamai"', () => {
+    const res1 = parseLocalInput('Talab 35000');
+    expect(res1.amount).toBe(35000);
+    expect(res1.type).toBe('income');
+
+    const res2 = parseLocalInput('Client kamai 6000');
+    expect(res2.amount).toBe(6000);
+    expect(res2.type).toBe('income');
+  });
 });

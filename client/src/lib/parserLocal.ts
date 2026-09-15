@@ -145,12 +145,14 @@ export const DEFAULT_CLIENT_CATEGORIES: Category[] = [
 const INCOME_INDICATORS = [
   'received', 'salary', 'earned', 'got', 'income', 'payment received', 'client paid',
   'refund', 'dad gave', 'mom gave', 'baba gave', 'aama gave', 'brother gave', 'sister gave',
-  'cashback', 'bonus', 'sold', 'credited', 'from freelancing', 'from client', 'gift', 'dakshina'
+  'cashback', 'bonus', 'sold', 'credited', 'from freelancing', 'from client', 'gift', 'dakshina',
+  'talab', 'kamai', 'aamdani', 'bhatta', 'pension', 'stipend'
 ];
 
 const EXPENSE_INDICATORS = [
   'paid', 'spent', 'bought', 'purchase', 'purchased', 'expense', 'bill', 'fare',
-  'debited', 'for', 'kharcha', 'khana', 'eating', 'ordered', 'took', 'cost'
+  'debited', 'for', 'kharcha', 'khana', 'eating', 'ordered', 'took', 'cost',
+  'tireko', 'kineko', 'bujhaye', 'tiro', 'kino'
 ];
 
 export function parseLocalInput(input: string, categories: Category[] = DEFAULT_CLIENT_CATEGORIES): ParsedTransaction {
@@ -170,7 +172,48 @@ export function parseLocalInput(input: string, categories: Category[] = DEFAULT_
 
   const lower = rawInput.toLowerCase();
 
-  // 1. Extract Amount
+  // 1. Extract Date first (e.g. "yesterday", "hijo", "today", "aaja", "2025-01-20")
+  const today = new Date();
+  let date = today.toISOString().split('T')[0];
+  let dateMatchText = '';
+
+  const yesterdayMatch = lower.match(/\b(yesterday|hijo)\b/i);
+  if (yesterdayMatch) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - 1);
+    date = d.toISOString().split('T')[0];
+    dateMatchText = yesterdayMatch[0];
+  } else {
+    const todayMatch = lower.match(/\b(today|aaja)\b/i);
+    if (todayMatch) {
+      dateMatchText = todayMatch[0];
+    } else {
+      const ymd = rawInput.match(/\b(\d{4})[-/](\d{1,2})[-/](\d{1,2})\b/);
+      if (ymd) {
+        const y = ymd[1];
+        const m = ymd[2].padStart(2, '0');
+        const d = ymd[3].padStart(2, '0');
+        date = `${y}-${m}-${d}`;
+        dateMatchText = ymd[0];
+      } else {
+        const dmy = rawInput.match(/\b(\d{1,2})[-/](\d{1,2})[-/](\d{4})\b/);
+        if (dmy) {
+          const d = dmy[1].padStart(2, '0');
+          const m = dmy[2].padStart(2, '0');
+          const y = dmy[3];
+          date = `${y}-${m}-${d}`;
+          dateMatchText = dmy[0];
+        }
+      }
+    }
+  }
+
+  // 2. Extract Amount (ignoring any matched date string so years like 2025 are not mistaken for amounts)
+  let sanitizedForAmount = rawInput;
+  if (dateMatchText) {
+    sanitizedForAmount = sanitizedForAmount.replace(dateMatchText, ' ');
+  }
+
   const amountPatterns = [
     /(?:rs\.?|npr\.?)\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?|\d+(?:\.\d+)?k?)/i,
     /([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?|\d+(?:\.\d+)?k?)\s*(?:rs\.?|rupees|npr\.?|\/-)/i,
@@ -183,7 +226,7 @@ export function parseLocalInput(input: string, categories: Category[] = DEFAULT_
   let amountMatchText = '';
 
   for (const pattern of amountPatterns) {
-    const match = rawInput.match(pattern);
+    const match = sanitizedForAmount.match(pattern);
     if (match) {
       amountMatchText = match[0];
       let numStr = (match[1] || match[0]).toLowerCase().replace(/,/g, '').trim();
@@ -196,26 +239,6 @@ export function parseLocalInput(input: string, categories: Category[] = DEFAULT_
         amount = parseFloat(numStr) || 0;
       }
       break;
-    }
-  }
-
-  // 2. Extract Date
-  const today = new Date();
-  let date = today.toISOString().split('T')[0];
-  let dateMatchText = '';
-
-  if (/\byesterday\b/i.test(lower)) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - 1);
-    date = d.toISOString().split('T')[0];
-    dateMatchText = 'yesterday';
-  } else if (/\btoday\b/i.test(lower)) {
-    dateMatchText = 'today';
-  } else {
-    const ymd = rawInput.match(/\b(\d{4}-\d{2}-\d{2})\b/);
-    if (ymd) {
-      date = ymd[0];
-      dateMatchText = ymd[0];
     }
   }
 

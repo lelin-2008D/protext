@@ -13,7 +13,7 @@ export function exportTransactionsToCSV(transactions: Transaction[], filename = 
     `"${(t.category_name || 'Other').replace(/"/g, '""')}"`,
     `"${(t.description || '').replace(/"/g, '""')}"`,
     t.amount.toFixed(2),
-    t.confidence ? (t.confidence * 100).toFixed(0) + '%' : '100%'
+    t.confidence !== undefined ? (t.confidence * 100).toFixed(0) + '%' : '100%'
   ]);
 
   const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');

@@ -124,9 +124,8 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
       const localTxs = await getLocalTransactions(user.id);
       const localSet = await getLocalSettings(user.id);
 
-      if (localTxs && localTxs.length > 0) {
-        setTransactions(localTxs);
-      }
+      setTransactions(localTxs || []);
+
       if (localSet) {
         const currentTheme = getInitialTheme();
         const resolvedTheme = localSet.theme || currentTheme;
@@ -198,6 +197,23 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Listen to background sync completions to refresh local state
+  useEffect(() => {
+    const handleSyncComplete = async () => {
+      if (user) {
+        const freshLocalTxs = await getLocalTransactions(user.id);
+        if (freshLocalTxs) {
+          setTransactions(freshLocalTxs);
+        }
+      }
+    };
+
+    window.addEventListener('hisab-sync-complete', handleSyncComplete);
+    return () => {
+      window.removeEventListener('hisab-sync-complete', handleSyncComplete);
+    };
+  }, [user]);
 
   // Multi-Device Realtime Cloud Updates (Supabase Realtime)
   useEffect(() => {

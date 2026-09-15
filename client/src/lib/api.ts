@@ -70,7 +70,7 @@ export class ApiService {
       let query = supabase.from('transactions').select('*').order('date', { ascending: false });
       if (params?.type) query = query.eq('type', params.type);
       if (params?.category) query = query.eq('category_name', params.category);
-      if (params?.since) query = query.gte('date', params.since);
+      if (params?.since) query = query.gt('updated_at', params.since);
       if (params?.search) query = query.ilike('description', `%${params.search}%`);
 
       const { data, error } = await query;

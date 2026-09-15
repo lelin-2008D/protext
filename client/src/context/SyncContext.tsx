@@ -3,7 +3,10 @@ import { SyncStatus } from '../types/index.js';
 import {
   getSyncQueue,
   bulkRemoveFromSyncQueue,
-  collapseSyncQueue
+  collapseSyncQueue,
+  deleteLocalTransaction,
+  saveLocalTransaction,
+  saveLocalSettings
 } from '../lib/db.js';
 import { ApiService } from '../lib/api.js';
 
@@ -100,14 +103,30 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           if (item.entity === 'transaction') {
             if (item.action === 'create') {
-              await ApiService.createTransaction(item.data);
+              const created = await ApiService.createTransaction(item.data);
+              if (created && created.id) {
+                // If the created transaction was given a new ID by server/Supabase, remove tempId
+                if (item.data?.id && item.data.id !== created.id) {
+                  await deleteLocalTransaction(item.data.id);
+                  await saveLocalTransaction({ ...created, _isOfflinePending: false });
+                } else {
+                  await saveLocalTransaction({ ...created, _isOfflinePending: false });
+                }
+              }
             } else if (item.action === 'update') {
-              await ApiService.updateTransaction(item.data.id, item.data);
+              const updated = await ApiService.updateTransaction(item.data.id, item.data);
+              if (updated) {
+                await saveLocalTransaction({ ...updated, _isOfflinePending: false });
+              }
             } else if (item.action === 'delete') {
               await ApiService.deleteTransaction(item.data.id);
+              await deleteLocalTransaction(item.data.id);
             }
           } else if (item.entity === 'settings' && item.action === 'update') {
-            await ApiService.updateSettings(item.data);
+            const updated = await ApiService.updateSettings(item.data);
+            if (updated) {
+              await saveLocalSettings(updated);
+            }
           } else if (item.entity === 'category' && item.action === 'create') {
             await ApiService.createCategory(item.data);
           }
@@ -122,6 +141,10 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // 3. Bulk remove all successfully processed queue items in one fast IndexedDB transaction
       if (successfulQueueIds.length > 0) {
         await bulkRemoveFromSyncQueue(successfulQueueIds);
+        // Dispatch sync event so TransactionContext updates local state
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('hisab-sync-complete'));
+        }
       }
 
       const remaining = await getSyncQueue();

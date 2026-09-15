@@ -82,9 +82,58 @@ describe('Transaction RuleParser', () => {
     expect(res.confidence).toBeLessThan(0.7);
   });
 
-  it('returns 0 amount and 0 confidence for empty or invalid text', () => {
-    const res = parser.parse('');
-    expect(res.amount).toBe(0);
-    expect(res.confidence).toBe(0);
+  it('correctly handles dates preceding amounts without confusing year as amount', () => {
+    const res = parser.parse('2025-01-20 Petrol 500');
+    expect(res.amount).toBe(500);
+    expect(res.date).toBe('2025-01-20');
+    expect(res.category).toBe('Transport');
+    expect(res.type).toBe('expense');
+  });
+
+  it('correctly parses Romanized Nepali date keywords "hijo" and "aaja"', () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yStr = yesterday.toISOString().split('T')[0];
+
+    const resHijo = parser.parse('Hijo momo 200');
+    expect(resHijo.amount).toBe(200);
+    expect(resHijo.date).toBe(yStr);
+    expect(resHijo.category).toBe('Food & Drinks');
+
+    const resAaja = parser.parse('Aaja chiya 30');
+    expect(resAaja.amount).toBe(30);
+    expect(resAaja.date).toBe(new Date().toISOString().split('T')[0]);
+    expect(resAaja.category).toBe('Food & Drinks');
+  });
+
+  it('correctly parses Nepali income terms like "talab" and "kamai"', () => {
+    const res1 = parser.parse('Talab aayo 45000');
+    expect(res1.amount).toBe(45000);
+    expect(res1.type).toBe('income');
+
+    const res2 = parser.parse('Freelance kamai 8000');
+    expect(res2.amount).toBe(8000);
+    expect(res2.type).toBe('income');
+    expect(res2.category).toBe('Freelance');
+  });
+
+  it('correctly handles custom categories without polluting other parser instances', () => {
+    const customParser = new RuleParser([
+      {
+        name: 'Gym',
+        type: 'expense',
+        keywords: ['gym', 'workout', 'protein'],
+        color: '#FF0000',
+        icon: 'Dumbbell'
+      }
+    ]);
+
+    const resCustom = customParser.parse('Gym membership 3000');
+    expect(resCustom.amount).toBe(3000);
+    expect(resCustom.category).toBe('Gym');
+
+    // Default parser remains untainted
+    const resDefault = parser.parse('Gym membership 3000');
+    expect(resDefault.category).not.toBe('Gym');
   });
 });

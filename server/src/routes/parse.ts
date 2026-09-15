@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { defaultParserService } from '../services/parser/parserService.js';
 import { parseLimiter } from '../middleware/rateLimiter.js';
+import { optionalAuth } from '../middleware/auth.js';
 import { StoreService } from '../services/store.js';
 
 const router = Router();
@@ -11,7 +12,7 @@ const parseSchema = z.object({
   customCategories: z.array(z.any()).optional()
 });
 
-router.post('/', parseLimiter, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+router.post('/', parseLimiter, optionalAuth, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const validated = parseSchema.safeParse(req.body);
     if (!validated.success) {

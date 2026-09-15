@@ -228,11 +228,14 @@ export class StoreService {
     if (supabase) {
       const { data, error } = await supabase
         .from('settings')
-        .upsert({
-          user_id: userId,
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
+        .upsert(
+          {
+            user_id: userId,
+            ...updates,
+            updated_at: new Date().toISOString()
+          },
+          { onConflict: 'user_id' }
+        )
         .select()
         .single();
 

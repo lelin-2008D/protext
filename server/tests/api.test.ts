@@ -192,6 +192,40 @@ describe('HISAB Backend API Endpoints', () => {
     expect(res.body.data.length).toBeGreaterThan(5);
   });
 
+  it('supports custom category creation and authenticated retrieval', async () => {
+    const userToken = 'Bearer mock-user-alice';
+
+    // Alice creates custom category
+    const catRes = await request(app)
+      .post('/api/categories')
+      .set('Authorization', userToken)
+      .send({
+        name: 'Investment',
+        type: 'expense',
+        keywords: ['shares', 'stocks', 'crypto', 'nepse'],
+        icon: 'TrendingUp',
+        color: '#10B981'
+      });
+
+    expect(catRes.status).toBe(201);
+    expect(catRes.body.data.name).toBe('Investment');
+
+    // Alice fetches categories (should include Investment)
+    const aliceCats = await request(app)
+      .get('/api/categories')
+      .set('Authorization', userToken);
+
+    expect(aliceCats.status).toBe(200);
+    const hasInvestment = aliceCats.body.data.some((c: any) => c.name === 'Investment');
+    expect(hasInvestment).toBe(true);
+
+    // Unauthenticated user fetches categories (should NOT include Alice's custom category)
+    const publicCats = await request(app).get('/api/categories');
+    expect(publicCats.status).toBe(200);
+    const publicHasInvestment = publicCats.body.data.some((c: any) => c.name === 'Investment');
+    expect(publicHasInvestment).toBe(false);
+  });
+
   it('supports delta sync with since query parameter', async () => {
     const userToken = 'Bearer mock-user-delta';
 

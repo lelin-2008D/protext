@@ -12,9 +12,9 @@ export class ParserService {
   }
 
   public async parse(input: string, customCategories?: Category[]): Promise<ParsedTransaction> {
-    if (customCategories && customCategories.length > 0) {
-      this.ruleParser = new RuleParser(customCategories);
-    }
+    const parser = (customCategories && customCategories.length > 0)
+      ? new RuleParser(customCategories)
+      : this.ruleParser;
 
     // Try AI parser if enabled
     const aiResult = await this.aiParser.parse(input, customCategories);
@@ -23,7 +23,7 @@ export class ParserService {
     }
 
     // Default to deterministic rule parser
-    return this.ruleParser.parse(input);
+    return parser.parse(input);
   }
 }
 

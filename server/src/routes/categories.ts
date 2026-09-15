@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { requireAuth } from '../middleware/auth.js';
+import { optionalAuth, requireAuth } from '../middleware/auth.js';
 import { StoreService } from '../services/store.js';
 
 const router = Router();
@@ -14,18 +14,9 @@ const createCategorySchema = z.object({
 });
 
 // GET /api/categories (Can be accessed anonymously for defaults or with auth for user-custom categories)
-router.get('/', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+router.get('/', optionalAuth, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    let userId: string | undefined;
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      // Best effort extract user if token present
-      const token = authHeader.split(' ')[1];
-      if (token.startsWith('mock-user-') || token === 'demo-test-token') {
-        userId = token === 'demo-test-token' ? 'demo-user-123' : token.replace('mock-user-', '');
-      }
-    }
-
+    const userId = req.user?.id;
     const categories = await StoreService.getCategories(userId);
     res.status(200).json({
       success: true,
