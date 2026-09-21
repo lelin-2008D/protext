@@ -15,6 +15,9 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
   resetPasswordForEmail: (email: string) => Promise<{ success: boolean; error?: string }>;
+  isPasswordRecovery: boolean;
+  setIsPasswordRecovery: (val: boolean) => void;
+  updatePasswordWithoutCurrent: (newPassword: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 interface StoredSession {
@@ -33,8 +36,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isGuest, setIsGuest] = useState(false);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
   useEffect(() => {
+    // Check if user landed on app via recovery link in URL hash/search
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash || '';
+      const search = window.location.search || '';
+      if (hash.includes('type=recovery') || search.includes('type=recovery')) {
+        setIsPasswordRecovery(true);
+      }
+    }
+
     const initializeAuth = async () => {
       try {
         // 1. Check if Supabase session exists
@@ -84,6 +97,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Supabase auth state change listener
     if (isSupabaseConfigured && supabase) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (_event === 'PASSWORD_RECOVERY') {
+          setIsPasswordRecovery(true);
+        }
+
         if (session?.user) {
           const userProfile: UserProfile = {
             id: session.user.id,
@@ -384,6 +401,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updatePasswordWithoutCurrent = async (newPassword: string): Promise<{ success: boolean; error?: string }> => {
+    if (!newPassword) {
+      return { success: false, error: 'New password is required.' };
+    }
+    if (newPassword.length < 6) {
+      return { success: false, error: 'New password must be at least 6 characters long.' };
+    }
+
+    if (!isSupabaseConfigured || !supabase) {
+      setIsPasswordRecovery(false);
+      return { success: true };
+    }
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) {
+        return { success: false, error: error.message || 'Failed to update password.' };
+      }
+
+      setIsPasswordRecovery(false);
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to update password.' };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -397,7 +443,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         continueAsGuest,
         signOut,
         changePassword,
-        resetPasswordForEmail
+        resetPasswordForEmail,
+        isPasswordRecovery,
+        setIsPasswordRecovery,
+        updatePasswordWithoutCurrent
       }}
     >
       {children}

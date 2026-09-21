@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AuthProvider } from './context/AuthContext.js';
+import { AuthProvider, useAuth } from './context/AuthContext.js';
 import { SyncProvider } from './context/SyncContext.js';
 import { TransactionProvider, useTransactions } from './context/TransactionContext.js';
 import { FriendMoneyProvider } from './context/FriendMoneyContext.js';
@@ -15,11 +15,13 @@ import { DeleteConfirmModal } from './components/DeleteConfirmModal.js';
 import { StartingBalanceModal } from './components/StartingBalanceModal.js';
 import { AddCustomCategoryModal } from './components/AddCustomCategoryModal.js';
 import { ChangePasswordModal } from './components/ChangePasswordModal.js';
+import { ResetPasswordModal } from './components/ResetPasswordModal.js';
 import { AuthModal } from './pages/AuthPage.js';
 import { Transaction } from './types/index.js';
 
 const MainLayout: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const { isPasswordRecovery, setIsPasswordRecovery } = useAuth();
 
   // Modal States
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
@@ -110,6 +112,11 @@ const MainLayout: React.FC = () => {
       <ChangePasswordModal
         isOpen={isChangePasswordOpen}
         onClose={() => setIsChangePasswordOpen(false)}
+      />
+
+      <ResetPasswordModal
+        isOpen={isPasswordRecovery}
+        onClose={() => setIsPasswordRecovery(false)}
       />
 
       <AuthModal
