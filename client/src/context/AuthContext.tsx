@@ -13,6 +13,8 @@ interface AuthContextType {
   signUpWithEmail: (email: string, name?: string) => Promise<{ success: boolean; error?: string }>;
   continueAsGuest: () => void;
   signOut: () => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
+  resetPasswordForEmail: (email: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 interface StoredSession {
@@ -311,6 +313,77 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     restoreOrCreateGuestSession();
   };
 
+  const changePassword = async (currentPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
+    if (!currentPassword) {
+      return { success: false, error: 'Current password is required.' };
+    }
+    if (!newPassword) {
+      return { success: false, error: 'New password is required.' };
+    }
+    if (newPassword.length < 6) {
+      return { success: false, error: 'New password must be at least 6 characters long.' };
+    }
+    if (isGuest || !user || !user.email) {
+      return { success: false, error: 'You must be signed in with an account to change your password.' };
+    }
+
+    if (!isSupabaseConfigured || !supabase) {
+      // Offline / Local mock mode
+      return { success: true };
+    }
+
+    try {
+      // 1. Verify current password by authenticating
+      const { error: verifyError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword
+      });
+
+      if (verifyError) {
+        return { success: false, error: 'Incorrect current password. Please try again.' };
+      }
+
+      // 2. Update to new password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (updateError) {
+        return { success: false, error: updateError.message || 'Failed to update password.' };
+      }
+
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to change password.' };
+    }
+  };
+
+  const resetPasswordForEmail = async (email: string): Promise<{ success: boolean; error?: string }> => {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      return { success: false, error: 'Please enter a valid email address.' };
+    }
+
+    if (!isSupabaseConfigured || !supabase) {
+      // Offline / mock mode
+      return { success: true };
+    }
+
+    try {
+      const redirectUrl = window.location.origin + (window.location.pathname.endsWith('/') ? window.location.pathname : window.location.pathname + '/');
+      const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+        redirectTo: redirectUrl
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to send reset link.' };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -322,7 +395,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signInWithEmail,
         signUpWithEmail,
         continueAsGuest,
-        signOut
+        signOut,
+        changePassword,
+        resetPasswordForEmail
       }}
     >
       {children}

@@ -1,4 +1,4 @@
-import { ParsedTransaction, Transaction, UserSettings, Category } from '../types/index.js';
+import { ParsedTransaction, Transaction, UserSettings, Category, Friend, FriendMoneyEntry } from '../types/index.js';
 import { supabase, isSupabaseConfigured } from './supabase.js';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? '' : 'http://localhost:5000');
@@ -270,6 +270,243 @@ export class ApiService {
       throw new Error(data.error || 'Failed to create category');
     }
     return data.data;
+  }
+
+  // Friends (Friend Money Calculator)
+  static async getFriends(): Promise<Friend[]> {
+    if (isSupabaseConfigured && supabase) {
+      const { data, error } = await supabase.from('friends').select('*').order('name');
+      if (error) throw new Error(error.message);
+      return data || [];
+    }
+
+    if (!API_BASE) return [];
+
+    try {
+      const res = await fetch(`${API_BASE}/api/friends`, {
+        method: 'GET',
+        headers: this.getHeaders()
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to fetch friends');
+      }
+      return data.data;
+    } catch {
+      return [];
+    }
+  }
+
+  static async createFriend(friend: Omit<Friend, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<Friend> {
+    if (isSupabaseConfigured && supabase) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return friend as Friend;
+      }
+      const payload = {
+        ...friend,
+        user_id: user.id
+      };
+      const { data, error } = await supabase.from('friends').insert([payload]).select().single();
+      if (error) throw new Error(error.message);
+      return data;
+    }
+
+    if (!API_BASE) {
+      return friend as Friend;
+    }
+
+    const res = await fetch(`${API_BASE}/api/friends`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify(friend)
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to create friend');
+    }
+    return data.data;
+  }
+
+  static async updateFriend(id: string, updates: Partial<Friend>): Promise<Friend> {
+    if (isSupabaseConfigured && supabase) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return { id, ...updates } as Friend;
+      }
+      const { data, error } = await supabase.from('friends').update(updates).eq('id', id).select().single();
+      if (error) throw new Error(error.message);
+      return data;
+    }
+
+    if (!API_BASE) {
+      return { id, ...updates } as Friend;
+    }
+
+    const res = await fetch(`${API_BASE}/api/friends/${id}`, {
+      method: 'PUT',
+      headers: this.getHeaders(),
+      body: JSON.stringify(updates)
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to update friend');
+    }
+    return data.data;
+  }
+
+  static async deleteFriend(id: string): Promise<void> {
+    if (isSupabaseConfigured && supabase) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { error } = await supabase.from('friends').delete().eq('id', id);
+      if (error) throw new Error(error.message);
+      return;
+    }
+
+    if (!API_BASE) return;
+
+    const res = await fetch(`${API_BASE}/api/friends/${id}`, {
+      method: 'DELETE',
+      headers: this.getHeaders()
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to delete friend');
+    }
+  }
+
+  // Friend Money Entries
+  static async getFriendEntries(friendId?: string): Promise<FriendMoneyEntry[]> {
+    if (isSupabaseConfigured && supabase) {
+      let query = supabase.from('friend_money_entries').select('*').order('date', { ascending: false });
+      if (friendId) {
+        query = query.eq('friend_id', friendId);
+      }
+      const { data, error } = await query;
+      if (error) throw new Error(error.message);
+      return (data || []).map((e: any) => ({
+        ...e,
+        amount: Number(e.amount)
+      }));
+    }
+
+    if (!API_BASE) return [];
+
+    try {
+      const url = friendId ? `${API_BASE}/api/friends/${friendId}/entries` : `${API_BASE}/api/friends/entries`;
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: this.getHeaders()
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to fetch friend entries');
+      }
+      return (data.data || []).map((e: any) => ({
+        ...e,
+        amount: Number(e.amount)
+      }));
+    } catch {
+      return [];
+    }
+  }
+
+  static async createFriendEntry(entry: Omit<FriendMoneyEntry, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<FriendMoneyEntry> {
+    if (isSupabaseConfigured && supabase) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return entry as FriendMoneyEntry;
+      }
+      const payload = {
+        ...entry,
+        user_id: user.id
+      };
+      const { data, error } = await supabase.from('friend_money_entries').insert([payload]).select().single();
+      if (error) throw new Error(error.message);
+      return {
+        ...data,
+        amount: Number(data.amount)
+      };
+    }
+
+    if (!API_BASE) {
+      return entry as FriendMoneyEntry;
+    }
+
+    const res = await fetch(`${API_BASE}/api/friends/${entry.friend_id}/entries`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify(entry)
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to create friend entry');
+    }
+    return {
+      ...data.data,
+      amount: Number(data.data.amount)
+    };
+  }
+
+  static async updateFriendEntry(id: string, updates: Partial<FriendMoneyEntry>): Promise<FriendMoneyEntry> {
+    if (isSupabaseConfigured && supabase) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return { id, ...updates } as FriendMoneyEntry;
+      }
+      const { data, error } = await supabase.from('friend_money_entries').update(updates).eq('id', id).select().single();
+      if (error) throw new Error(error.message);
+      return {
+        ...data,
+        amount: Number(data.amount)
+      };
+    }
+
+    if (!API_BASE) {
+      return { id, ...updates } as FriendMoneyEntry;
+    }
+
+    const res = await fetch(`${API_BASE}/api/friends/entries/${id}`, {
+      method: 'PUT',
+      headers: this.getHeaders(),
+      body: JSON.stringify(updates)
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to update friend entry');
+    }
+    return {
+      ...data.data,
+      amount: Number(data.data.amount)
+    };
+  }
+
+  static async deleteFriendEntry(id: string): Promise<void> {
+    if (isSupabaseConfigured && supabase) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { error } = await supabase.from('friend_money_entries').delete().eq('id', id);
+      if (error) throw new Error(error.message);
+      return;
+    }
+
+    if (!API_BASE) return;
+
+    const res = await fetch(`${API_BASE}/api/friends/entries/${id}`, {
+      method: 'DELETE',
+      headers: this.getHeaders()
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to delete friend entry');
+    }
   }
 }
 

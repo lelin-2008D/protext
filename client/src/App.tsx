@@ -2,16 +2,19 @@ import React, { useState } from 'react';
 import { AuthProvider } from './context/AuthContext.js';
 import { SyncProvider } from './context/SyncContext.js';
 import { TransactionProvider, useTransactions } from './context/TransactionContext.js';
+import { FriendMoneyProvider } from './context/FriendMoneyContext.js';
 import { Navbar } from './components/Navbar.js';
 import { MobileNav } from './components/MobileNav.js';
 import { DashboardPage } from './pages/DashboardPage.js';
 import { AddPage } from './pages/AddPage.js';
 import { HistoryPage } from './pages/HistoryPage.js';
+import { FriendMoneyPage } from './pages/FriendMoneyPage.js';
 import { SettingsPage } from './pages/SettingsPage.js';
 import { EditModal } from './components/EditModal.js';
 import { DeleteConfirmModal } from './components/DeleteConfirmModal.js';
 import { StartingBalanceModal } from './components/StartingBalanceModal.js';
 import { AddCustomCategoryModal } from './components/AddCustomCategoryModal.js';
+import { ChangePasswordModal } from './components/ChangePasswordModal.js';
 import { AuthModal } from './pages/AuthPage.js';
 import { Transaction } from './types/index.js';
 
@@ -24,6 +27,7 @@ const MainLayout: React.FC = () => {
   const [isStartingBalanceOpen, setIsStartingBalanceOpen] = useState(false);
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   const { categories, editTransaction, deleteTransaction, addCustomCategory } = useTransactions();
 
@@ -59,11 +63,16 @@ const MainLayout: React.FC = () => {
           />
         )}
 
+        {activeTab === 'friends' && (
+          <FriendMoneyPage />
+        )}
+
         {activeTab === 'settings' && (
           <SettingsPage
             onOpenStartingBalance={() => setIsStartingBalanceOpen(true)}
             onOpenAddCategory={() => setIsAddCategoryOpen(true)}
             onOpenAuthModal={() => setIsAuthOpen(true)}
+            onOpenChangePassword={() => setIsChangePasswordOpen(true)}
           />
         )}
       </main>
@@ -98,6 +107,11 @@ const MainLayout: React.FC = () => {
         onAddCategory={addCustomCategory}
       />
 
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
+      />
+
       <AuthModal
         isOpen={isAuthOpen}
         onClose={() => setIsAuthOpen(false)}
@@ -111,7 +125,9 @@ export function App() {
     <AuthProvider>
       <SyncProvider>
         <TransactionProvider>
-          <MainLayout />
+          <FriendMoneyProvider>
+            <MainLayout />
+          </FriendMoneyProvider>
         </TransactionProvider>
       </SyncProvider>
     </AuthProvider>

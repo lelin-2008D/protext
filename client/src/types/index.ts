@@ -57,3 +57,40 @@ export interface UserProfile {
   email?: string;
   name: string;
 }
+
+export type FriendEntryType = 'given' | 'returned';
+
+export interface Friend {
+  id: string;
+  user_id: string;
+  name: string;
+  note?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  // Offline sync metadata
+  _isOfflinePending?: boolean;
+  _isDeleted?: boolean;
+}
+
+export interface FriendMoneyEntry {
+  id: string;
+  friend_id: string;
+  user_id: string;
+  type: FriendEntryType;
+  amount: number;
+  date: string;
+  note?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  // Offline sync metadata
+  _isOfflinePending?: boolean;
+  _isDeleted?: boolean;
+}
+
+export interface FriendSummary {
+  friend: Friend;
+  totalGiven: number;
+  totalReturned: number;
+  remaining: number;
+  entriesCount: number;
+}

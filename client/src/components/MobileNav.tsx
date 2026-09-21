@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, History, Plus, Settings } from 'lucide-react';
+import { LayoutDashboard, History, Plus, Users, Settings } from 'lucide-react';
 
 interface MobileNavProps {
   activeTab: string;
@@ -9,7 +9,7 @@ interface MobileNavProps {
 export const MobileNav: React.FC<MobileNavProps> = ({ activeTab, setActiveTab }) => {
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 pb-safe">
-      <div className="flex items-center justify-around h-16 px-3 max-w-lg mx-auto">
+      <div className="flex items-center justify-around h-16 px-2 max-w-lg mx-auto">
         {/* Dashboard Tab */}
         <button
           onClick={() => setActiveTab('dashboard')}
@@ -20,7 +20,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ activeTab, setActiveTab })
           }`}
         >
           <LayoutDashboard className="w-5 h-5 mb-0.5" />
-          <span className="text-[11px]">Dashboard</span>
+          <span className="text-[10px]">Dashboard</span>
         </button>
 
         {/* History Tab */}
@@ -33,7 +33,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ activeTab, setActiveTab })
           }`}
         >
           <History className="w-5 h-5 mb-0.5" />
-          <span className="text-[11px]">History</span>
+          <span className="text-[10px]">History</span>
         </button>
 
         {/* Elevated Quick Add Button */}
@@ -41,10 +41,23 @@ export const MobileNav: React.FC<MobileNavProps> = ({ activeTab, setActiveTab })
           onClick={() => setActiveTab('add')}
           className="flex flex-col items-center justify-center -mt-6 group focus:outline-none"
         >
-          <div className="w-13 h-13 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-600/30 group-active:scale-90 transition-transform p-3">
-            <Plus className="w-7 h-7 stroke-[2.5]" />
+          <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-600/30 group-active:scale-90 transition-transform p-2.5">
+            <Plus className="w-6 h-6 stroke-[2.5]" />
           </div>
           <span className="text-[10px] font-medium text-slate-600 dark:text-slate-400 mt-1">Add</span>
+        </button>
+
+        {/* Friends Tab */}
+        <button
+          onClick={() => setActiveTab('friends')}
+          className={`flex flex-col items-center justify-center flex-1 py-1 transition-all ${
+            activeTab === 'friends'
+              ? 'text-blue-600 dark:text-blue-400 font-semibold'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-900'
+          }`}
+        >
+          <Users className="w-5 h-5 mb-0.5" />
+          <span className="text-[10px]">Friends</span>
         </button>
 
         {/* Settings Tab */}
@@ -57,7 +70,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ activeTab, setActiveTab })
           }`}
         >
           <Settings className="w-5 h-5 mb-0.5" />
-          <span className="text-[11px]">Settings</span>
+          <span className="text-[10px]">Settings</span>
         </button>
       </div>
     </div>

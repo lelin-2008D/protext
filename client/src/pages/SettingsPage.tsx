@@ -4,19 +4,21 @@ import { useAuth } from '../context/AuthContext.js';
 import { exportTransactionsToCSV } from '../lib/export.js';
 import {
   Wallet, Sun, Moon, Monitor, Download, LogOut,
-  Plus, Sparkles, ShieldCheck
+  Plus, Sparkles, ShieldCheck, KeyRound
 } from 'lucide-react';
 
 interface SettingsPageProps {
   onOpenStartingBalance: () => void;
   onOpenAddCategory: () => void;
   onOpenAuthModal: () => void;
+  onOpenChangePassword?: () => void;
 }
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({
   onOpenStartingBalance,
   onOpenAddCategory,
-  onOpenAuthModal
+  onOpenAuthModal,
+  onOpenChangePassword
 }) => {
   const { settings, startingBalance, categories, transactions, updateTheme } = useTransactions();
   const { user, isGuest, signOut } = useAuth();
@@ -63,6 +65,22 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             </button>
           )}
         </div>
+
+        {!isGuest && onOpenChangePassword && (
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">Change Password</p>
+              <p className="text-[11px] text-slate-400">Update your account login password</p>
+            </div>
+            <button
+              onClick={onOpenChangePassword}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs transition"
+            >
+              <KeyRound className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <span>Change Password</span>
+            </button>
+          </div>
+        )}
 
         <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
           <span className="flex items-center gap-1">

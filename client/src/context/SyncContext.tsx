@@ -6,7 +6,11 @@ import {
   collapseSyncQueue,
   deleteLocalTransaction,
   saveLocalTransaction,
-  saveLocalSettings
+  saveLocalSettings,
+  saveLocalFriend,
+  deleteLocalFriend,
+  saveLocalFriendEntry,
+  deleteLocalFriendEntry
 } from '../lib/db.js';
 import { ApiService } from '../lib/api.js';
 
@@ -129,6 +133,46 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           } else if (item.entity === 'category' && item.action === 'create') {
             await ApiService.createCategory(item.data);
+          } else if (item.entity === 'friend') {
+            if (item.action === 'create') {
+              const created = await ApiService.createFriend(item.data);
+              if (created && created.id) {
+                if (item.data?.id && item.data.id !== created.id) {
+                  await deleteLocalFriend(item.data.id);
+                  await saveLocalFriend({ ...created, _isOfflinePending: false });
+                } else {
+                  await saveLocalFriend({ ...created, _isOfflinePending: false });
+                }
+              }
+            } else if (item.action === 'update') {
+              const updated = await ApiService.updateFriend(item.data.id, item.data);
+              if (updated) {
+                await saveLocalFriend({ ...updated, _isOfflinePending: false });
+              }
+            } else if (item.action === 'delete') {
+              await ApiService.deleteFriend(item.data.id);
+              await deleteLocalFriend(item.data.id);
+            }
+          } else if (item.entity === 'friend_entry') {
+            if (item.action === 'create') {
+              const created = await ApiService.createFriendEntry(item.data);
+              if (created && created.id) {
+                if (item.data?.id && item.data.id !== created.id) {
+                  await deleteLocalFriendEntry(item.data.id);
+                  await saveLocalFriendEntry({ ...created, _isOfflinePending: false });
+                } else {
+                  await saveLocalFriendEntry({ ...created, _isOfflinePending: false });
+                }
+              }
+            } else if (item.action === 'update') {
+              const updated = await ApiService.updateFriendEntry(item.data.id, item.data);
+              if (updated) {
+                await saveLocalFriendEntry({ ...updated, _isOfflinePending: false });
+              }
+            } else if (item.action === 'delete') {
+              await ApiService.deleteFriendEntry(item.data.id);
+              await deleteLocalFriendEntry(item.data.id);
+            }
           }
 
           successfulQueueIds.push(item.id);
@@ -141,9 +185,10 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // 3. Bulk remove all successfully processed queue items in one fast IndexedDB transaction
       if (successfulQueueIds.length > 0) {
         await bulkRemoveFromSyncQueue(successfulQueueIds);
-        // Dispatch sync event so TransactionContext updates local state
+        // Dispatch sync event so TransactionContext and FriendMoneyContext update local state
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('hisab-sync-complete'));
+          window.dispatchEvent(new CustomEvent('hisab-friend-sync-complete'));
         }
       }
 

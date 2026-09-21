@@ -10,6 +10,7 @@ import parseRoutes from './routes/parse.js';
 import transactionsRoutes from './routes/transactions.js';
 import settingsRoutes from './routes/settings.js';
 import categoriesRoutes from './routes/categories.js';
+import friendsRoutes from './routes/friends.js';
 
 export function createApp(): Express {
   const app = express();
@@ -62,6 +63,7 @@ export function createApp(): Express {
   app.use('/api/transactions', transactionsRoutes);
   app.use('/api/settings', settingsRoutes);
   app.use('/api/categories', categoriesRoutes);
+  app.use('/api/friends', friendsRoutes);
 
   // 404 Handler
   app.use('/api/*', (req, res) => {

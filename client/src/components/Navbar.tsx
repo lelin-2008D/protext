@@ -1,7 +1,7 @@
 import React from 'react';
 import { SyncBadge } from './SyncBadge.js';
 import { useAuth } from '../context/AuthContext.js';
-import { Wallet, Sparkles, User as UserIcon } from 'lucide-react';
+import { Wallet, Sparkles, User as UserIcon, Users } from 'lucide-react';
 
 interface NavbarProps {
   onOpenSettings?: () => void;
@@ -64,6 +64,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, activeTab, setAc
             }`}
           >
             History
+          </button>
+          <button
+            onClick={() => setActiveTab && setActiveTab('friends')}
+            className={`px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+              activeTab === 'friends'
+                ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5" />
+            Friend Money
           </button>
           <button
             onClick={() => setActiveTab && setActiveTab('settings')}

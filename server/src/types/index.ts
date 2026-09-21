@@ -54,6 +54,29 @@ export interface UserProfile {
   updated_at?: string;
 }
 
+export type FriendEntryType = 'given' | 'returned';
+
+export interface Friend {
+  id: string;
+  user_id: string;
+  name: string;
+  note?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface FriendMoneyEntry {
+  id: string;
+  friend_id: string;
+  user_id: string;
+  type: FriendEntryType;
+  amount: number;
+  date: string;
+  note?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;

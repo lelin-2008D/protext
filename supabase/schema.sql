@@ -173,3 +173,70 @@ VALUES
     (NULL, 'Refund', 'income', ARRAY['refund', 'return', 'cashback', 'reimbursement'], 'RotateCcw', '#14B8A6', true),
     (NULL, 'Other Income', 'income', ARRAY['income', 'interest', 'dividend', 'rent received', 'sold'], 'Wallet', '#84CC16', true)
 ON CONFLICT DO NOTHING;
+
+-- 5. FRIENDS TABLE (Friend Money Calculator)
+CREATE TABLE IF NOT EXISTS public.friends (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    note TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- 6. FRIEND MONEY ENTRIES TABLE
+CREATE TABLE IF NOT EXISTS public.friend_money_entries (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    friend_id UUID NOT NULL REFERENCES public.friends(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    type TEXT NOT NULL CHECK (type IN ('given', 'returned')),
+    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
+    date DATE NOT NULL DEFAULT CURRENT_DATE,
+    note TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- INDEXES for Friends & Friend Entries
+CREATE INDEX IF NOT EXISTS idx_friends_user_id ON public.friends(user_id);
+CREATE INDEX IF NOT EXISTS idx_friend_money_entries_friend_id ON public.friend_money_entries(friend_id);
+CREATE INDEX IF NOT EXISTS idx_friend_money_entries_user_id ON public.friend_money_entries(user_id);
+CREATE INDEX IF NOT EXISTS idx_friend_money_entries_date ON public.friend_money_entries(date DESC);
+
+-- ENABLE ROW LEVEL SECURITY (RLS) FOR FRIENDS
+ALTER TABLE public.friends ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.friend_money_entries ENABLE ROW LEVEL SECURITY;
+
+-- POLICIES FOR FRIENDS
+CREATE POLICY "Users can view own friends"
+    ON public.friends FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own friends"
+    ON public.friends FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own friends"
+    ON public.friends FOR UPDATE
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own friends"
+    ON public.friends FOR DELETE
+    USING (auth.uid() = user_id);
+
+-- POLICIES FOR FRIEND MONEY ENTRIES
+CREATE POLICY "Users can view own friend money entries"
+    ON public.friend_money_entries FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own friend money entries"
+    ON public.friend_money_entries FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own friend money entries"
+    ON public.friend_money_entries FOR UPDATE
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own friend money entries"
+    ON public.friend_money_entries FOR DELETE
+    USING (auth.uid() = user_id);
