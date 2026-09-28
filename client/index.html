@@ -44,19 +44,26 @@
       ========================= */
       #preloader {
         position: fixed;
-        inset: 0;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh;
         display: flex;
         justify-content: center;
         align-items: center;
         overflow: hidden;
-        background:
+        background-color: #050816;
+        background-image:
           radial-gradient(
             circle at center,
             rgba(37, 99, 235, .15),
             transparent 45%
-          ),
-          #050816;
-        z-index: 99999;
+          );
+        z-index: 999999;
+        pointer-events: auto;
         transition:
           opacity .8s ease,
           visibility .8s ease;
@@ -65,6 +72,7 @@
       #preloader.hide {
         opacity: 0;
         visibility: hidden;
+        pointer-events: none;
       }
 
       /* =========================
@@ -512,24 +520,37 @@
 
     <script>
       (function() {
-        function dismissPreloader() {
-          var preloader = document.getElementById("preloader");
-          if (!preloader || preloader.dataset.dismissed) return;
-          preloader.dataset.dismissed = "true";
+        var preloader = document.getElementById("preloader");
+        if (!preloader) return;
+
+        var startTime = Date.now();
+        var MIN_DISPLAY_MS = 2200;
+        var isDismissing = false;
+
+        function dismiss() {
+          if (isDismissing) return;
+          isDismissing = true;
+          var elapsed = Date.now() - startTime;
+          var delay = Math.max(0, MIN_DISPLAY_MS - elapsed);
+
           setTimeout(function() {
-            preloader.classList.add("hide");
-            setTimeout(function() {
-              if (preloader.parentNode) {
-                preloader.remove();
-              }
-            }, 800);
-          }, 2200);
+            if (preloader) {
+              preloader.classList.add("hide");
+              setTimeout(function() {
+                if (preloader && preloader.parentNode) {
+                  preloader.parentNode.removeChild(preloader);
+                }
+              }, 800);
+            }
+          }, delay);
         }
 
         if (document.readyState === "complete") {
-          dismissPreloader();
+          dismiss();
         } else {
-          window.addEventListener("load", dismissPreloader);
+          window.addEventListener("load", dismiss);
+          // Safety timeout in case load event is held up by external scripts/fonts
+          setTimeout(dismiss, 3500);
         }
       })();
     </script>
