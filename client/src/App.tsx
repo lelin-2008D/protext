@@ -16,6 +16,7 @@ import { StartingBalanceModal } from './components/StartingBalanceModal.js';
 import { AddCustomCategoryModal } from './components/AddCustomCategoryModal.js';
 import { ChangePasswordModal } from './components/ChangePasswordModal.js';
 import { ResetPasswordModal } from './components/ResetPasswordModal.js';
+import { Preloader } from './components/Preloader.js';
 import { AuthModal } from './pages/AuthPage.js';
 import { Transaction } from './types/index.js';
 
@@ -35,6 +36,9 @@ const MainLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0B0F19] text-slate-900 dark:text-slate-100 flex flex-col selection:bg-blue-500 selection:text-white">
+      {/* Animated HISAB Preloader connected to real app state */}
+      <Preloader />
+
       {/* Top Navbar */}
       <Navbar
         activeTab={activeTab}

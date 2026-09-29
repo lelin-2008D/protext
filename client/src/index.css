@@ -48,3 +48,90 @@
 .pt-safe {
   padding-top: max(0.5rem, env(safe-area-inset-top));
 }
+
+/* =========================================
+   HISAB PRELOADER ANIMATIONS
+   ========================================= */
+
+@keyframes preloaderLogoEnter {
+  0% {
+    opacity: 0;
+    transform: scale(0.65) rotate(-8deg);
+    filter: blur(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+    filter: blur(0px);
+  }
+}
+
+@keyframes preloaderLogoGlow {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.25);
+  }
+  50% {
+    transform: scale(1.025);
+    box-shadow: 0 15px 35px -5px rgba(37, 99, 235, 0.4);
+  }
+}
+
+@keyframes preloaderTextEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes preloaderProgress {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(40%);
+  }
+  100% {
+    transform: translateX(210%);
+  }
+}
+
+.animate-preloader-logo {
+  animation:
+    preloaderLogoEnter 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+    preloaderLogoGlow 3s ease-in-out 0.65s infinite;
+  will-change: transform, opacity, filter;
+}
+
+.animate-preloader-text {
+  animation: preloaderTextEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both;
+  will-change: transform, opacity;
+}
+
+.animate-preloader-bar {
+  animation: preloaderTextEnter 0.45s ease 0.35s both;
+  will-change: transform, opacity;
+}
+
+.animate-preloader-progress {
+  animation: preloaderProgress 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: transform;
+}
+
+/* Accessibility: Respect Reduced Motion Preferences */
+@media (prefers-reduced-motion: reduce) {
+  .animate-preloader-logo,
+  .animate-preloader-text,
+  .animate-preloader-bar,
+  .animate-preloader-progress {
+    animation: none !important;
+    transform: none !important;
+    filter: none !important;
+    opacity: 1 !important;
+  }
+}
+
