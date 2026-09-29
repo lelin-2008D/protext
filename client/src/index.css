@@ -50,37 +50,86 @@
 }
 
 /* =========================================
-   HISAB PRELOADER ANIMATIONS
+   HISAB PRELOADER ENHANCED ANIMATIONS
    ========================================= */
 
 @keyframes preloaderLogoEnter {
   0% {
     opacity: 0;
-    transform: scale(0.65) rotate(-8deg);
-    filter: blur(6px);
+    transform: scale(0.6) rotate(-10deg) translateY(20px);
+    filter: blur(8px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.05) rotate(2deg) translateY(-3px);
+    filter: blur(0px);
+  }
+  80% {
+    transform: scale(0.98) rotate(-1deg) translateY(1px);
   }
   100% {
     opacity: 1;
-    transform: scale(1) rotate(0deg);
-    filter: blur(0px);
+    transform: scale(1) rotate(0deg) translateY(0);
   }
 }
 
-@keyframes preloaderLogoGlow {
+@keyframes preloaderLogoFloat {
   0%, 100% {
-    transform: scale(1);
-    box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.25);
+    transform: translateY(0) scale(1);
+    box-shadow: 0 15px 35px -5px rgba(37, 99, 235, 0.3), 0 0 30px rgba(37, 99, 235, 0.15);
   }
   50% {
-    transform: scale(1.025);
-    box-shadow: 0 15px 35px -5px rgba(37, 99, 235, 0.4);
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 25px 50px -5px rgba(37, 99, 235, 0.45), 0 0 45px rgba(37, 99, 235, 0.25);
+  }
+}
+
+@keyframes preloaderShineSweep {
+  0% {
+    transform: translateX(-150%) rotate(25deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.6;
+  }
+  60% {
+    transform: translateX(180%) rotate(25deg);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateX(180%) rotate(25deg);
+    opacity: 0;
+  }
+}
+
+@keyframes preloaderAmbientPulse {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
   }
 }
 
 @keyframes preloaderTextEnter {
   0% {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(16px);
+    letter-spacing: 0.1em;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    letter-spacing: 0.22em;
+  }
+}
+
+@keyframes preloaderSubtitleEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
   }
   100% {
     opacity: 1;
@@ -88,50 +137,72 @@
   }
 }
 
-@keyframes preloaderProgress {
+@keyframes preloaderProgressSmooth {
   0% {
-    transform: translateX(-100%);
+    left: -40%;
+    width: 35%;
   }
   50% {
-    transform: translateX(40%);
+    left: 45%;
+    width: 45%;
   }
   100% {
-    transform: translateX(210%);
+    left: 105%;
+    width: 35%;
   }
 }
 
 .animate-preloader-logo {
   animation:
-    preloaderLogoEnter 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards,
-    preloaderLogoGlow 3s ease-in-out 0.65s infinite;
-  will-change: transform, opacity, filter;
+    preloaderLogoEnter 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+    preloaderLogoFloat 3.2s ease-in-out 0.75s infinite;
+  will-change: transform, opacity, filter, box-shadow;
+}
+
+.animate-preloader-shine {
+  animation: preloaderShineSweep 2.8s ease-in-out 0.8s infinite;
+  will-change: transform, opacity;
+}
+
+.animate-preloader-ambient {
+  animation: preloaderAmbientPulse 3.5s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
 .animate-preloader-text {
-  animation: preloaderTextEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both;
+  animation: preloaderTextEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both;
+  will-change: transform, opacity, letter-spacing;
+}
+
+.animate-preloader-subtitle {
+  animation: preloaderSubtitleEnter 0.55s ease 0.38s both;
   will-change: transform, opacity;
 }
 
 .animate-preloader-bar {
-  animation: preloaderTextEnter 0.45s ease 0.35s both;
+  animation: preloaderSubtitleEnter 0.5s ease 0.48s both;
   will-change: transform, opacity;
 }
 
-.animate-preloader-progress {
-  animation: preloaderProgress 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  will-change: transform;
+.animate-preloader-progress-smooth {
+  animation: preloaderProgressSmooth 1.6s cubic-bezier(0.45, 0.05, 0.25, 0.95) infinite;
+  will-change: left, width;
 }
 
 /* Accessibility: Respect Reduced Motion Preferences */
 @media (prefers-reduced-motion: reduce) {
   .animate-preloader-logo,
+  .animate-preloader-shine,
+  .animate-preloader-ambient,
   .animate-preloader-text,
+  .animate-preloader-subtitle,
   .animate-preloader-bar,
-  .animate-preloader-progress {
+  .animate-preloader-progress-smooth {
     animation: none !important;
     transform: none !important;
     filter: none !important;
     opacity: 1 !important;
   }
 }
+
 
