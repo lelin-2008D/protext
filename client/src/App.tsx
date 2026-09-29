@@ -3,7 +3,8 @@ import { AuthProvider, useAuth } from './context/AuthContext.js';
 import { SyncProvider } from './context/SyncContext.js';
 import { TransactionProvider, useTransactions } from './context/TransactionContext.js';
 import { FriendMoneyProvider } from './context/FriendMoneyContext.js';
-import { Navbar } from './components/Navbar.js';
+import { Sidebar } from './components/Sidebar.js';
+import { TopHeader } from './components/TopHeader.js';
 import { MobileNav } from './components/MobileNav.js';
 import { DashboardPage } from './pages/DashboardPage.js';
 import { AddPage } from './pages/AddPage.js';
@@ -22,6 +23,7 @@ import { Transaction } from './types/index.js';
 
 const MainLayout: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isPasswordRecovery, setIsPasswordRecovery } = useAuth();
 
   // Modal States
@@ -35,58 +37,115 @@ const MainLayout: React.FC = () => {
   const { categories, editTransaction, deleteTransaction, addCustomCategory } = useTransactions();
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0B0F19] text-slate-900 dark:text-slate-100 flex flex-col selection:bg-blue-500 selection:text-white">
-      {/* Animated HISAB Preloader connected to real app state */}
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#070B14] text-slate-900 dark:text-slate-100 flex selection:bg-blue-500 selection:text-white">
+      {/* Animated HISAB Preloader */}
       <Preloader />
 
-      {/* Top Navbar */}
-      <Navbar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        onOpenSettings={() => setActiveTab('settings')}
-      />
+      {/* Desktop Sidebar (hidden on mobile, fixed on desktop) */}
+      <div className="hidden lg:block shrink-0">
+        <Sidebar
+          activeTab={activeTab}
+          setActiveTab={tab => {
+            setActiveTab(tab);
+            setMobileMenuOpen(false);
+          }}
+          onOpenStartingBalance={() => setIsStartingBalanceOpen(true)}
+          onOpenAddCategory={() => setIsAddCategoryOpen(true)}
+          onOpenSettings={() => setActiveTab('settings')}
+          onOpenAuthModal={() => setIsAuthOpen(true)}
+        />
+      </div>
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 pt-5">
-        {activeTab === 'dashboard' && (
-          <DashboardPage
-            onNavigateToHistory={() => setActiveTab('history')}
-            onEditTransaction={tx => setEditingTransaction(tx)}
-            onDeleteTransaction={tx => setDeletingTransaction(tx)}
-            onOpenStartingBalance={() => setIsStartingBalanceOpen(true)}
+      {/* Mobile Sidebar Overlay Drawer */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden flex">
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setMobileMenuOpen(false)}
           />
-        )}
+          <div className="relative z-10 w-72 h-full">
+            <Sidebar
+              activeTab={activeTab}
+              setActiveTab={tab => {
+                setActiveTab(tab);
+                setMobileMenuOpen(false);
+              }}
+              onOpenStartingBalance={() => {
+                setIsStartingBalanceOpen(true);
+                setMobileMenuOpen(false);
+              }}
+              onOpenAddCategory={() => {
+                setIsAddCategoryOpen(true);
+                setMobileMenuOpen(false);
+              }}
+              onOpenSettings={() => {
+                setActiveTab('settings');
+                setMobileMenuOpen(false);
+              }}
+              onOpenAuthModal={() => {
+                setIsAuthOpen(true);
+                setMobileMenuOpen(false);
+              }}
+            />
+          </div>
+        </div>
+      )}
 
-        {activeTab === 'add' && (
-          <AddPage onTransactionSaved={() => setActiveTab('dashboard')} />
-        )}
+      {/* Main App Content Viewport */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
+        {/* Top Header Bar */}
+        <TopHeader
+          onOpenMobileMenu={() => setMobileMenuOpen(true)}
+          onOpenSettings={() => setActiveTab('settings')}
+          onOpenAuthModal={() => setIsAuthOpen(true)}
+        />
 
-        {activeTab === 'history' && (
-          <HistoryPage
-            onEditTransaction={tx => setEditingTransaction(tx)}
-            onDeleteTransaction={tx => setDeletingTransaction(tx)}
-            onNavigateToAdd={() => setActiveTab('add')}
-          />
-        )}
+        {/* Dynamic Page Views */}
+        <main className="flex-1 max-w-[1500px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 lg:pb-12">
+          {activeTab === 'dashboard' && (
+            <DashboardPage
+              onNavigateToHistory={() => setActiveTab('history')}
+              onEditTransaction={tx => setEditingTransaction(tx)}
+              onDeleteTransaction={tx => setDeletingTransaction(tx)}
+              onOpenStartingBalance={() => setIsStartingBalanceOpen(true)}
+              onNavigateToAdd={() => setActiveTab('add')}
+              onNavigateToFriends={() => setActiveTab('friends')}
+            />
+          )}
 
-        {activeTab === 'friends' && (
-          <FriendMoneyPage />
-        )}
+          {activeTab === 'add' && (
+            <AddPage onTransactionSaved={() => setActiveTab('dashboard')} />
+          )}
 
-        {activeTab === 'settings' && (
-          <SettingsPage
-            onOpenStartingBalance={() => setIsStartingBalanceOpen(true)}
-            onOpenAddCategory={() => setIsAddCategoryOpen(true)}
-            onOpenAuthModal={() => setIsAuthOpen(true)}
-            onOpenChangePassword={() => setIsChangePasswordOpen(true)}
-          />
-        )}
-      </main>
+          {activeTab === 'history' && (
+            <HistoryPage
+              onEditTransaction={tx => setEditingTransaction(tx)}
+              onDeleteTransaction={tx => setDeletingTransaction(tx)}
+              onNavigateToAdd={() => setActiveTab('add')}
+            />
+          )}
 
-      {/* Mobile Bottom Navigation */}
-      <MobileNav activeTab={activeTab} setActiveTab={setActiveTab} />
+          {activeTab === 'friends' && (
+            <FriendMoneyPage />
+          )}
 
-      {/* Modals */}
+          {activeTab === 'settings' && (
+            <SettingsPage
+              onOpenStartingBalance={() => setIsStartingBalanceOpen(true)}
+              onOpenAddCategory={() => setIsAddCategoryOpen(true)}
+              onOpenAuthModal={() => setIsAuthOpen(true)}
+              onOpenChangePassword={() => setIsChangePasswordOpen(true)}
+            />
+          )}
+        </main>
+
+        {/* Mobile Bottom Navigation (Visible on mobile/tablet) */}
+        <div className="lg:hidden">
+          <MobileNav activeTab={activeTab} setActiveTab={setActiveTab} />
+        </div>
+      </div>
+
+      {/* Reusable Modals */}
       <EditModal
         isOpen={Boolean(editingTransaction)}
         transaction={editingTransaction}
