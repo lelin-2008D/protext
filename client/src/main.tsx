@@ -5,7 +5,12 @@ import './index.css';
 import { registerSW } from 'virtual:pwa-register';
 
 // Auto-register service worker and apply updates immediately
-registerSW({ immediate: true });
+const updateSW = registerSW({
+  immediate: true,
+  onNeedRefresh() {
+    updateSW(true);
+  }
+});
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
