@@ -9,29 +9,21 @@ export const CategoryDonutChart: React.FC = () => {
   const formatCurrency = (val: number) => {
     return `${settings.currency === 'NPR' ? 'Rs.' : settings.currency} ${val.toLocaleString('en-IN', {
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 2
     })}`;
   };
 
-  // Demo fallback categories if user hasn't recorded expense transactions yet
-  const defaultCategories = [
-    { name: 'Food', amount: 7800, percentage: 38, color: '#F97316' },
-    { name: 'Transport', amount: 4500, percentage: 22, color: '#3B82F6' },
-    { name: 'Utilities', amount: 3100, percentage: 15, color: '#8B5CF6' },
-    { name: 'Education', amount: 2050, percentage: 10, color: '#F59E0B' },
-    { name: 'Others', amount: 3050, percentage: 15, color: '#06B6D4' }
-  ];
-
   const hasData = categoryTotals.length > 0 && totalExpenses > 0;
-  const displayTotals = hasData ? categoryTotals : defaultCategories;
-  const displayTotalAmount = hasData ? totalExpenses : 20500;
 
-  const chartData = displayTotals.map(c => ({
-    name: c.name,
-    value: c.amount,
-    color: c.color || '#3B82F6',
-    percentage: c.percentage
-  }));
+  // Chart data purely from user transactions
+  const chartData = hasData
+    ? categoryTotals.map(c => ({
+        name: c.name,
+        value: c.amount,
+        color: c.color || '#3B82F6',
+        percentage: c.percentage
+      }))
+    : [{ name: 'No Expenses', value: 1, color: '#334155', percentage: 0 }];
 
   return (
     <div className="rounded-2xl bg-white dark:bg-[#0E1626] border border-slate-200 dark:border-slate-800/80 p-5 shadow-sm">
@@ -51,7 +43,7 @@ export const CategoryDonutChart: React.FC = () => {
                 cy="50%"
                 innerRadius={50}
                 outerRadius={72}
-                paddingAngle={4}
+                paddingAngle={hasData ? 4 : 0}
                 dataKey="value"
                 stroke="none"
               >
@@ -59,23 +51,25 @@ export const CategoryDonutChart: React.FC = () => {
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip
-                formatter={(value: any) => [`Rs. ${Number(value || 0).toLocaleString('en-IN')}`, 'Spent']}
-                contentStyle={{
-                  backgroundColor: '#0F172A',
-                  borderColor: '#334155',
-                  borderRadius: '10px',
-                  color: '#fff',
-                  fontSize: '11px'
-                }}
-              />
+              {hasData && (
+                <Tooltip
+                  formatter={(value: any) => [`Rs. ${Number(value || 0).toLocaleString('en-IN')}`, 'Spent']}
+                  contentStyle={{
+                    backgroundColor: '#0F172A',
+                    borderColor: '#334155',
+                    borderRadius: '10px',
+                    color: '#fff',
+                    fontSize: '11px'
+                  }}
+                />
+              )}
             </PieChart>
           </ResponsiveContainer>
 
           {/* Center Label */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
-            <span className="text-[13px] font-black text-slate-900 dark:text-white leading-tight">
-              {formatCurrency(displayTotalAmount)}
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-2">
+            <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-tight truncate max-w-[120px]">
+              {formatCurrency(totalExpenses)}
             </span>
             <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider">
               Total Expense
@@ -85,15 +79,22 @@ export const CategoryDonutChart: React.FC = () => {
 
         {/* Legend List */}
         <div className="sm:col-span-6 space-y-2 text-xs">
-          {chartData.slice(0, 5).map(cat => (
-            <div key={cat.name} className="flex items-center justify-between">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
-                <span className="text-slate-700 dark:text-slate-300 font-medium truncate">{cat.name}</span>
+          {hasData ? (
+            categoryTotals.slice(0, 5).map(cat => (
+              <div key={cat.name} className="flex items-center justify-between">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
+                  <span className="text-slate-700 dark:text-slate-300 font-medium truncate">{cat.name}</span>
+                </div>
+                <span className="font-bold text-slate-900 dark:text-slate-100">{cat.percentage}%</span>
               </div>
-              <span className="font-bold text-slate-900 dark:text-slate-100">{cat.percentage}%</span>
+            ))
+          ) : (
+            <div className="py-4 text-slate-400 dark:text-slate-500 text-center sm:text-left">
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">No expenses recorded yet</p>
+              <p className="text-[11px] mt-0.5">Track your expenses to see category breakdown</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>

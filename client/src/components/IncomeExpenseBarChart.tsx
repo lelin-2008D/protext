@@ -15,9 +15,9 @@ export const IncomeExpenseBarChart: React.FC = () => {
   const { transactions } = useTransactions();
   const [timeRange, setTimeRange] = useState<'7days' | '30days'>('7days');
 
-  // Compute last 7 days data dynamically from transactions or fallback to graceful weekly progression
+  // Compute actual daily data purely from user's real transactions
   const generateChartData = () => {
-    const days = timeRange === '7days' ? 7 : 14;
+    const days = timeRange === '7days' ? 7 : 30;
     const result = [];
     const now = new Date();
 
@@ -28,32 +28,16 @@ export const IncomeExpenseBarChart: React.FC = () => {
       const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       const label = `${monthNames[d.getMonth()]} ${d.getDate()}`;
 
-      // Filter transactions on this day
+      // Filter user's real transactions on this day
       let dayIncome = 0;
       let dayExpense = 0;
 
       transactions.forEach(tx => {
         if (tx.date && tx.date.startsWith(dateStr)) {
           if (tx.type === 'income') dayIncome += tx.amount;
-          else dayExpense += tx.amount;
+          else if (tx.type === 'expense') dayExpense += tx.amount;
         }
       });
-
-      // Default visual demo values if database has few historical entries
-      if (dayIncome === 0 && dayExpense === 0 && i < 7) {
-        const demoValues = [
-          { inc: 24000, exp: 8500 },
-          { inc: 22000, exp: 12000 },
-          { inc: 28000, exp: 15000 },
-          { inc: 25000, exp: 14000 },
-          { inc: 18000, exp: 11000 },
-          { inc: 26000, exp: 16000 },
-          { inc: 32000, exp: 18000 }
-        ];
-        const dv = demoValues[i % demoValues.length];
-        dayIncome = dv.inc;
-        dayExpense = dv.exp;
-      }
 
       result.push({
         name: label,
@@ -66,8 +50,10 @@ export const IncomeExpenseBarChart: React.FC = () => {
   };
 
   const chartData = generateChartData();
+  const hasAnyActivity = chartData.some(d => d.income > 0 || d.expenses > 0);
 
   const formatYAxis = (val: number) => {
+    if (val === 0) return '0';
     if (val >= 1000) {
       return `${Math.round(val / 1000)}k`;
     }
@@ -114,7 +100,7 @@ export const IncomeExpenseBarChart: React.FC = () => {
       </div>
 
       {/* Chart Canvas */}
-      <div className="h-64 w-full">
+      <div className="h-64 w-full relative">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }} barGap={4}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
@@ -148,6 +134,13 @@ export const IncomeExpenseBarChart: React.FC = () => {
             <Bar dataKey="expenses" fill="#3B82F6" radius={[4, 4, 0, 0]} maxBarSize={14} />
           </BarChart>
         </ResponsiveContainer>
+
+        {!hasAnyActivity && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none bg-white/40 dark:bg-[#0E1626]/40 backdrop-blur-[1px]">
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">No transactions recorded for this period</p>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Your income and expenses will appear here as you track them</p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -15,11 +15,13 @@ export const DashboardWelcomeHeader: React.FC = () => {
     greeting = 'Good evening';
   }
 
-  const firstName = user?.name
+  const rawName = user?.name
     ? user.name.split(' ')[0]
     : user?.email
     ? user.email.split('@')[0]
     : 'Lelin';
+
+  const firstName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
 
   const dateFormatted = now.toLocaleDateString('en-US', {
     month: 'short',
@@ -35,9 +37,8 @@ export const DashboardWelcomeHeader: React.FC = () => {
     <div className="flex flex-wrap items-center justify-between gap-4">
       {/* Greeting Title */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-          <span>{greeting}, {firstName}</span>
-          <span className="animate-bounce">👋</span>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          {greeting}, {firstName}
         </h1>
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
           Here&apos;s your financial overview for today.

@@ -15,9 +15,9 @@ export const DashboardQuickNLP: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [parsedResult, setParsedResult] = useState<ParsedTransaction | null>(null);
 
-  const handleSubmit = async (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent, customText?: string) => {
     if (e) e.preventDefault();
-    const raw = input.trim();
+    const raw = (customText !== undefined ? customText : input).trim();
     if (!raw) return;
 
     setLoading(true);
@@ -60,37 +60,52 @@ export const DashboardQuickNLP: React.FC = () => {
     }
   };
 
+  const exampleChips = ['Lunch 250', 'Bus 40', 'Salary 15000', 'Coffee 150'];
+
   return (
     <div className="w-full space-y-3">
-      {/* Sleek NLP Input Container matching image */}
+      {/* Sleek NLP Input Container: Perfect contrast in both Dark and Light themes */}
       <form
         onSubmit={handleSubmit}
-        className="relative flex items-center gap-3 p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-blue-950/40 via-[#0E1626] to-[#0E1626] dark:from-blue-950/30 dark:via-[#0E1626] dark:to-[#0E1626] border border-blue-500/30 dark:border-blue-500/20 shadow-lg shadow-blue-500/5 focus-within:border-blue-500/60 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all"
+        className="relative flex items-center gap-3 p-2.5 sm:p-3.5 rounded-2xl bg-white dark:bg-[#0E1626] border border-blue-500/40 dark:border-blue-500/30 shadow-md shadow-blue-500/5 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all"
       >
         {/* Lightning Icon Badge */}
-        <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/30 text-blue-400 flex items-center justify-center shrink-0">
-          <Zap className="w-5 h-5 fill-blue-500 text-blue-400" />
+        <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-600/20 border border-blue-200 dark:border-blue-500/30 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+          <Zap className="w-5 h-5 fill-blue-600 dark:fill-blue-500 text-blue-600 dark:text-blue-400" />
         </div>
 
         {/* Input Box */}
         <div className="flex-1 min-w-0">
           <input
             type="text"
-            placeholder="What did you spend?"
+            placeholder="What did you spend or earn?"
             value={input}
             onChange={e => setInput(e.target.value)}
-            className="w-full bg-transparent text-sm sm:text-base font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none"
+            className="w-full bg-transparent text-sm sm:text-base font-semibold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none"
           />
-          <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
-            e.g. &ldquo;Lunch 250&rdquo;, &ldquo;Bus 40&rdquo;, &ldquo;Salary 15000&rdquo;
-          </p>
+          <div className="flex items-center gap-2 mt-1 overflow-x-auto no-scrollbar">
+            <span className="text-[11px] text-slate-400 dark:text-slate-500 shrink-0">Try:</span>
+            {exampleChips.map(chip => (
+              <button
+                key={chip}
+                type="button"
+                onClick={() => {
+                  setInput(chip);
+                  handleSubmit(undefined, chip);
+                }}
+                className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-slate-100 hover:bg-blue-50 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-200/60 dark:border-slate-700/60 transition shrink-0"
+              >
+                {chip}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Plus Submit Button */}
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-500 active:scale-95 disabled:opacity-50 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-600/30 transition-all"
+          className="w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-500 active:scale-95 disabled:opacity-40 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-600/30 transition-all"
           title="Parse & Add"
         >
           {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5 stroke-[2.5]" />}

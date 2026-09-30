@@ -49,18 +49,8 @@ export const DashboardRecentTransactions: React.FC<DashboardRecentTransactionsPr
     return { icon: ShoppingCart, bg: 'bg-slate-500/15 text-slate-400 border-slate-500/20', pillBg: 'bg-slate-500/15 text-slate-300 border-slate-500/30' };
   };
 
-  // Demo fallback entries when user has no transactions yet
-  const demoTransactions: Partial<Transaction>[] = [
-    { id: 'demo-1', description: 'Momo', category_name: 'Food', amount: 250, type: 'expense', date: new Date().toISOString() },
-    { id: 'demo-2', description: 'Bus Fare', category_name: 'Transport', amount: 40, type: 'expense', date: new Date().toISOString() },
-    { id: 'demo-3', description: 'Salary', category_name: 'Income', amount: 25000, type: 'income', date: new Date(Date.now() - 86400000).toISOString() },
-    { id: 'demo-4', description: 'Coffee', category_name: 'Food', amount: 150, type: 'expense', date: new Date(Date.now() - 86400000).toISOString() },
-    { id: 'demo-5', description: 'Internet Bill', category_name: 'Utilities', amount: 800, type: 'expense', date: new Date(Date.now() - 172800000).toISOString() },
-    { id: 'demo-6', description: 'Freelance Work', category_name: 'Income', amount: 5000, type: 'income', date: new Date(Date.now() - 259200000).toISOString() }
-  ];
-
   const hasTransactions = transactions.length > 0;
-  const displayList = hasTransactions ? transactions.slice(0, 6) : (demoTransactions as Transaction[]);
+  const displayList = transactions.slice(0, 6);
 
   const formatRowDate = (dateStr?: string) => {
     if (!dateStr) return 'Today';
@@ -92,64 +82,75 @@ export const DashboardRecentTransactions: React.FC<DashboardRecentTransactionsPr
           onClick={onNavigateToHistory}
           className="text-xs font-semibold text-blue-500 hover:text-blue-400 flex items-center gap-1 group transition"
         >
-          <span>View All</span>
+          <span>View All ({transactions.length})</span>
           <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
         </button>
       </div>
 
-      {/* Table Header Row */}
-      <div className="grid grid-cols-12 gap-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 pb-2.5 border-b border-slate-100 dark:border-slate-800/80">
-        <div className="col-span-5 sm:col-span-4">Description</div>
-        <div className="col-span-3 sm:col-span-3">Date</div>
-        <div className="col-span-2 sm:col-span-3 text-center sm:text-left">Category</div>
-        <div className="col-span-2 sm:col-span-2 text-right">Amount</div>
-      </div>
+      {hasTransactions ? (
+        <>
+          {/* Table Header Row */}
+          <div className="grid grid-cols-12 gap-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 pb-2.5 border-b border-slate-100 dark:border-slate-800/80">
+            <div className="col-span-5 sm:col-span-4">Description</div>
+            <div className="col-span-3 sm:col-span-3">Date</div>
+            <div className="col-span-2 sm:col-span-3 text-center sm:text-left">Category</div>
+            <div className="col-span-2 sm:col-span-2 text-right">Amount</div>
+          </div>
 
-      {/* Transaction Rows */}
-      <div className="divide-y divide-slate-100 dark:divide-slate-800/40">
-        {displayList.map(tx => {
-          const theme = getCategoryTheme(tx.category_name, tx.description);
-          const Icon = theme.icon;
-          const isIncome = tx.type === 'income';
+          {/* Transaction Rows */}
+          <div className="divide-y divide-slate-100 dark:divide-slate-800/40">
+            {displayList.map(tx => {
+              const theme = getCategoryTheme(tx.category_name, tx.description);
+              const Icon = theme.icon;
+              const isIncome = tx.type === 'income';
 
-          return (
-            <div
-              key={tx.id}
-              onClick={() => hasTransactions && onEditTransaction && onEditTransaction(tx)}
-              className="grid grid-cols-12 gap-2 items-center px-3 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/40 transition cursor-pointer group"
-            >
-              {/* Description + Icon */}
-              <div className="col-span-5 sm:col-span-4 flex items-center gap-3 min-w-0">
-                <div className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center border ${theme.bg}`}>
-                  <Icon className="w-4 h-4" />
+              return (
+                <div
+                  key={tx.id}
+                  onClick={() => onEditTransaction && onEditTransaction(tx)}
+                  className="grid grid-cols-12 gap-2 items-center px-3 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/40 transition cursor-pointer group"
+                >
+                  {/* Description + Icon */}
+                  <div className="col-span-5 sm:col-span-4 flex items-center gap-3 min-w-0">
+                    <div className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center border ${theme.bg}`}>
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <span className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
+                      {tx.description}
+                    </span>
+                  </div>
+
+                  {/* Date */}
+                  <div className="col-span-3 sm:col-span-3 text-[11px] sm:text-xs text-slate-400 truncate">
+                    {formatRowDate(tx.date)}
+                  </div>
+
+                  {/* Category Pill */}
+                  <div className="col-span-2 sm:col-span-3">
+                    <span className={`inline-block text-[10px] sm:text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${theme.pillBg} truncate max-w-[100px]`}>
+                      {tx.category_name || 'General'}
+                    </span>
+                  </div>
+
+                  {/* Amount */}
+                  <div className="col-span-2 sm:col-span-2 text-right">
+                    <span className={`text-xs sm:text-sm font-bold tracking-tight ${isIncome ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
+                      {isIncome ? '+ ' : '- '}Rs. {tx.amount.toLocaleString('en-IN')}
+                    </span>
+                  </div>
                 </div>
-                <span className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
-                  {tx.description}
-                </span>
-              </div>
-
-              {/* Date */}
-              <div className="col-span-3 sm:col-span-3 text-[11px] sm:text-xs text-slate-400 truncate">
-                {formatRowDate(tx.date)}
-              </div>
-
-              {/* Category Pill */}
-              <div className="col-span-2 sm:col-span-3">
-                <span className={`inline-block text-[10px] sm:text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${theme.pillBg} truncate max-w-[100px]`}>
-                  {tx.category_name || 'General'}
-                </span>
-              </div>
-
-              {/* Amount */}
-              <div className="col-span-2 sm:col-span-2 text-right">
-                <span className={`text-xs sm:text-sm font-bold tracking-tight ${isIncome ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
-                  {isIncome ? '+ ' : '- '}Rs. {tx.amount.toLocaleString('en-IN')}
-                </span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+              );
+            })}
+          </div>
+        </>
+      ) : (
+        <div className="py-10 text-center text-slate-400">
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">No transactions recorded yet</p>
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
+            Type above in the quick spend box to start tracking your finances!
+          </p>
+        </div>
+      )}
     </div>
   );
 };

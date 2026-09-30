@@ -9,24 +9,43 @@ import {
   CartesianGrid
 } from 'recharts';
 import { LineChart, ChevronDown } from 'lucide-react';
+import { useTransactions } from '../context/TransactionContext.js';
 
 export const MonthlyOverviewChart: React.FC = () => {
+  const { transactions } = useTransactions();
   const [selectedMonth, setSelectedMonth] = useState('current');
 
-  // Dynamic monthly distribution or smooth progression curves
+  // Compute actual monthly progression from user's real transactions
   const generateMonthlyData = () => {
     const points = [1, 5, 10, 15, 20, 25, 30];
-    const baseIncome = [18000, 32000, 28000, 35000, 31000, 48000, 52000];
-    const baseExpense = [9000, 18000, 15000, 22000, 19000, 26000, 29000];
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth(); // 0-indexed
 
-    return points.map((day, idx) => ({
-      day: `${day}`,
-      income: baseIncome[idx],
-      expenses: baseExpense[idx]
-    }));
+    return points.map(day => {
+      let cumulativeIncome = 0;
+      let cumulativeExpense = 0;
+
+      transactions.forEach(tx => {
+        if (tx.date) {
+          const d = new Date(tx.date);
+          if (d.getFullYear() === currentYear && d.getMonth() === currentMonth && d.getDate() <= day) {
+            if (tx.type === 'income') cumulativeIncome += tx.amount;
+            else if (tx.type === 'expense') cumulativeExpense += tx.amount;
+          }
+        }
+      });
+
+      return {
+        day: `${day}`,
+        income: cumulativeIncome,
+        expenses: cumulativeExpense
+      };
+    });
   };
 
   const chartData = generateMonthlyData();
+  const hasAnyActivity = chartData.some(d => d.income > 0 || d.expenses > 0);
 
   const formatYAxis = (val: number) => {
     if (val === 0) return '0';
@@ -62,7 +81,7 @@ export const MonthlyOverviewChart: React.FC = () => {
       </div>
 
       {/* Chart Canvas */}
-      <div className="h-44 w-full">
+      <div className="h-44 w-full relative">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <defs>
@@ -119,6 +138,13 @@ export const MonthlyOverviewChart: React.FC = () => {
             />
           </AreaChart>
         </ResponsiveContainer>
+
+        {!hasAnyActivity && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none bg-white/40 dark:bg-[#0E1626]/40 backdrop-blur-[1px]">
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">No monthly data yet</p>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Track your money to see monthly trends</p>
+          </div>
+        )}
       </div>
 
       {/* Legend */}
