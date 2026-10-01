@@ -124,6 +124,16 @@ export const FriendMoneyProvider: React.FC<{ children: React.ReactNode }> = ({ c
     };
   }, [user]);
 
+  useEffect(() => {
+    const handleDataReset = () => {
+      setFriends([]);
+      setFriendEntries([]);
+    };
+
+    window.addEventListener('hisab-data-reset', handleDataReset);
+    return () => window.removeEventListener('hisab-data-reset', handleDataReset);
+  }, []);
+
   // Multi-device Realtime subscriptions for friends and entries
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase || !user || user.id.startsWith('guest-')) {

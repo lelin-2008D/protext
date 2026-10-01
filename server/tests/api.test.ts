@@ -184,6 +184,46 @@ describe('HISAB Backend API Endpoints', () => {
     expect(updateRes.body.data.theme).toBe('dark');
   });
 
+  it('clears only the authenticated user data and resets settings as requested', async () => {
+    const userToken = 'Bearer mock-user-alice';
+    const otherUserToken = 'Bearer mock-user-bob';
+
+    await request(app)
+      .post('/api/transactions')
+      .set('Authorization', userToken)
+      .send({ type: 'expense', amount: 250, description: 'Alice coffee' });
+    await request(app)
+      .post('/api/transactions')
+      .set('Authorization', otherUserToken)
+      .send({ type: 'expense', amount: 400, description: 'Bob coffee' });
+    await request(app)
+      .put('/api/settings')
+      .set('Authorization', userToken)
+      .send({ starting_balance: 9000, theme: 'dark' });
+
+    const clearRes = await request(app)
+      .delete('/api/settings/data')
+      .set('Authorization', userToken)
+      .send({ resetSettings: true });
+
+    expect(clearRes.status).toBe(200);
+
+    const aliceTransactions = await request(app)
+      .get('/api/transactions')
+      .set('Authorization', userToken);
+    const bobTransactions = await request(app)
+      .get('/api/transactions')
+      .set('Authorization', otherUserToken);
+    const aliceSettings = await request(app)
+      .get('/api/settings')
+      .set('Authorization', userToken);
+
+    expect(aliceTransactions.body.data).toHaveLength(0);
+    expect(bobTransactions.body.data).toHaveLength(1);
+    expect(aliceSettings.body.data.starting_balance).toBe(0);
+    expect(aliceSettings.body.data.theme).toBe('light');
+  });
+
   it('returns categories list', async () => {
     const res = await request(app).get('/api/categories');
     expect(res.status).toBe(200);

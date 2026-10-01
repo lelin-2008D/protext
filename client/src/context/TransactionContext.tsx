@@ -13,7 +13,9 @@ import {
   saveLocalSettings,
   addToSyncQueue,
   getLastSyncTime,
-  saveLastSyncTime
+  saveLastSyncTime,
+  clearLastSyncTime,
+  clearLocalDB
 } from '../lib/db.js';
 import { DEFAULT_CLIENT_CATEGORIES } from '../lib/parserLocal.js';
 
@@ -43,6 +45,8 @@ interface TransactionContextType {
   updateTheme: (theme: 'light' | 'dark' | 'system') => Promise<void>;
   addCustomCategory: (cat: Omit<Category, 'id' | 'user_id'>) => Promise<void>;
   refreshData: () => Promise<void>;
+  clearAllData: () => Promise<void>;
+  resetAllData: () => Promise<void>;
 }
 
 const TransactionContext = createContext<TransactionContextType | undefined>(undefined);
@@ -78,7 +82,7 @@ const applyThemeToDOM = (theme: 'light' | 'dark' | 'system') => {
 };
 
 export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const { isOnline, triggerSync } = useSync();
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -562,6 +566,37 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [loadData, isOnline, triggerSync]);
 
+  const clearUserData = useCallback(async (resetSettings: boolean): Promise<void> => {
+    if (!user) return;
+    if (!isGuest && !isOnline) {
+      throw new Error('Connect to the internet before clearing synced account data.');
+    }
+
+    if (!isGuest) {
+      await ApiService.deleteUserData(resetSettings);
+    }
+
+    await clearLocalDB();
+    clearLastSyncTime(user.id);
+
+    const nextSettings: UserSettings = {
+      ...settings,
+      user_id: user.id,
+      starting_balance: 0,
+      theme: resetSettings ? 'light' : settings.theme
+    };
+
+    setTransactions([]);
+    setCategories(DEFAULT_CLIENT_CATEGORIES);
+    setSettings(nextSettings);
+    applyThemeToDOM(nextSettings.theme);
+    await saveLocalSettings(nextSettings);
+    window.dispatchEvent(new Event('hisab-data-reset'));
+  }, [user, isGuest, isOnline, settings]);
+
+  const clearAllData = useCallback(() => clearUserData(false), [clearUserData]);
+  const resetAllData = useCallback(() => clearUserData(true), [clearUserData]);
+
   return (
     <TransactionContext.Provider
       value={{
@@ -580,7 +615,9 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
         updateStartingBalance,
         updateTheme,
         addCustomCategory,
-        refreshData
+        refreshData,
+        clearAllData,
+        resetAllData
       }}
     >
       {children}

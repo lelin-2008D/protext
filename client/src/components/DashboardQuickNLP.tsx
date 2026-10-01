@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Zap, Plus, Loader2 } from 'lucide-react';
+import { Zap, Plus } from 'lucide-react';
 import { useTransactions } from '../context/TransactionContext.js';
 import { useSync } from '../context/SyncContext.js';
 import { parseLocalInput } from '../lib/parserLocal.js';
@@ -15,6 +15,7 @@ export const DashboardQuickNLP: React.FC = () => {
 
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [spinning, setSpinning] = useState(false);
   const [parsedResult, setParsedResult] = useState<ParsedTransaction | null>(null);
   const [preferredType, setPreferredType] = useState<TransactionType>('expense');
 
@@ -24,6 +25,7 @@ export const DashboardQuickNLP: React.FC = () => {
     if (!raw) return;
 
     setLoading(true);
+    setSpinning(true);
     try {
       let result: ParsedTransaction;
       if (isOnline) {
@@ -40,6 +42,7 @@ export const DashboardQuickNLP: React.FC = () => {
       setParsedResult(applyPreferredType(parseLocalInput(raw, categories), categories, preferredType));
     } finally {
       setLoading(false);
+      window.setTimeout(() => setSpinning(false), 520);
     }
   };
 
@@ -90,11 +93,12 @@ export const DashboardQuickNLP: React.FC = () => {
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm shadow-blue-600/25 transition hover:bg-blue-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+          aria-busy={loading}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-blue-400/80 bg-blue-600 text-white shadow-[0_0_0_2px_rgba(59,130,246,0.16),0_0_16px_rgba(59,130,246,0.34)] transition duration-200 hover:-translate-y-0.5 hover:scale-105 hover:bg-blue-700 hover:shadow-[0_0_0_3px_rgba(59,130,246,0.2),0_0_22px_rgba(59,130,246,0.48)] active:scale-95 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-80 disabled:hover:translate-y-0 disabled:hover:scale-100 dark:border-blue-300/80 dark:bg-blue-600 dark:shadow-[0_0_0_2px_rgba(96,165,250,0.2),0_0_20px_rgba(59,130,246,0.48)] dark:hover:bg-blue-500 dark:hover:shadow-[0_0_0_3px_rgba(96,165,250,0.26),0_0_26px_rgba(59,130,246,0.62)]"
           title="Add transaction"
           aria-label="Add transaction"
         >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-5 w-5 stroke-[2.5]" />}
+          <Plus className={`h-5 w-5 stroke-[2.5] transition-transform duration-500 ${spinning ? 'animate-spin' : ''}`} />
         </button>
       </form>
 

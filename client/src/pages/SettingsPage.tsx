@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTransactions } from '../context/TransactionContext.js';
 import { useAuth } from '../context/AuthContext.js';
 import { exportTransactionsToCSV } from '../lib/export.js';
 import {
   Wallet, Sun, Moon, Monitor, Download, LogOut,
-  Plus, Sparkles, ShieldCheck, KeyRound
+  Plus, Sparkles, ShieldCheck, KeyRound, Trash2, RotateCcw, AlertTriangle
 } from 'lucide-react';
 
 interface SettingsPageProps {
@@ -20,11 +20,31 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   onOpenAuthModal,
   onOpenChangePassword
 }) => {
-  const { settings, startingBalance, categories, transactions, updateTheme } = useTransactions();
+  const { settings, startingBalance, categories, transactions, updateTheme, clearAllData, resetAllData } = useTransactions();
   const { user, isGuest, signOut } = useAuth();
+  const [workingAction, setWorkingAction] = useState<'clear' | 'reset' | null>(null);
+  const [dataActionError, setDataActionError] = useState('');
 
   const handleExport = () => {
     exportTransactionsToCSV(transactions, `hisab_backup_${new Date().toISOString().split('T')[0]}.csv`);
+  };
+
+  const handleDataAction = async (action: 'clear' | 'reset') => {
+    const message = action === 'clear'
+      ? 'Delete all transactions, friends, friend records, and custom categories? Your account and theme will stay.'
+      : 'Reset everything in HISAB? This deletes all data and restores the starting balance and theme defaults.';
+    if (!window.confirm(message)) return;
+
+    setWorkingAction(action);
+    setDataActionError('');
+    try {
+      if (action === 'clear') await clearAllData();
+      else await resetAllData();
+    } catch (error) {
+      setDataActionError(error instanceof Error ? error.message : 'Could not clear your data. Please try again.');
+    } finally {
+      setWorkingAction(null);
+    }
   };
 
   return (
@@ -220,6 +240,54 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
           <Download className="w-3.5 h-3.5" />
           <span>Export CSV</span>
         </button>
+      </div>
+
+      {/* Destructive data controls */}
+      <div className="rounded-2xl border border-rose-200 bg-rose-50/60 p-5 shadow-sm dark:border-rose-950/70 dark:bg-rose-950/20">
+        <div className="flex items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-300">
+            <AlertTriangle className="h-4 w-4" />
+          </div>
+          <div>
+            <h4 className="text-sm font-bold text-rose-900 dark:text-rose-200">Danger zone</h4>
+            <p className="mt-0.5 text-xs text-rose-700/80 dark:text-rose-300/70">These actions permanently remove data and cannot be undone.</p>
+          </div>
+        </div>
+
+        <div className="mt-4 divide-y divide-rose-200/80 dark:divide-rose-900/60">
+          <div className="flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">Delete all data</p>
+              <p className="text-xs text-slate-600 dark:text-slate-400">Remove transactions, friends, records, and custom categories.</p>
+            </div>
+            <button
+              onClick={() => handleDataAction('clear')}
+              disabled={workingAction !== null}
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-rose-300 bg-white px-3 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-rose-900 dark:bg-slate-900 dark:text-rose-300 dark:hover:bg-rose-950/50"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              {workingAction === 'clear' ? 'Deleting...' : 'Delete data'}
+            </button>
+          </div>
+
+          <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">Reset everything</p>
+              <p className="text-xs text-slate-600 dark:text-slate-400">Delete all data and restore theme and balance defaults.</p>
+            </div>
+            <button
+              onClick={() => handleDataAction('reset')}
+              disabled={workingAction !== null}
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-rose-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              {workingAction === 'reset' ? 'Resetting...' : 'Reset app'}
+            </button>
+          </div>
+        </div>
+
+        {dataActionError && <p className="mt-4 rounded-xl bg-white/80 px-3 py-2 text-xs font-semibold text-rose-700 dark:bg-slate-900/70 dark:text-rose-300">{dataActionError}</p>}
+        {isGuest && <p className="mt-3 text-[11px] text-rose-700/70 dark:text-rose-300/60">Guest data is stored only on this device.</p>}
       </div>
 
       <div className="text-center pt-2">

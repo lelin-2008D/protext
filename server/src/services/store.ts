@@ -259,6 +259,41 @@ export class StoreService {
     return updated;
   }
 
+  static async clearUserData(userId: string, resetSettings: boolean): Promise<void> {
+    const supabase = getSupabaseAdmin();
+    if (supabase) {
+      const { error: entriesError } = await supabase.from('friend_money_entries').delete().eq('user_id', userId);
+      if (entriesError) throw new Error(entriesError.message);
+      const { error: friendsError } = await supabase.from('friends').delete().eq('user_id', userId);
+      if (friendsError) throw new Error(friendsError.message);
+      const { error: transactionsError } = await supabase.from('transactions').delete().eq('user_id', userId);
+      if (transactionsError) throw new Error(transactionsError.message);
+      const { error: categoriesError } = await supabase.from('categories').delete().eq('user_id', userId);
+      if (categoriesError) throw new Error(categoriesError.message);
+
+      if (resetSettings) {
+        const { error } = await supabase.from('settings').update({ starting_balance: 0, currency: 'NPR', theme: 'light' }).eq('user_id', userId);
+        if (error) throw new Error(error.message);
+      } else {
+        const { error } = await supabase.from('settings').update({ starting_balance: 0 }).eq('user_id', userId);
+        if (error) throw new Error(error.message);
+      }
+      return;
+    }
+
+    memoryTransactions.delete(userId);
+    memoryCategories.delete(userId);
+    memoryFriends.delete(userId);
+    memoryFriendEntries.delete(userId);
+
+    if (resetSettings) {
+      memorySettings.delete(userId);
+    } else {
+      const current = await this.getSettings(userId);
+      memorySettings.set(userId, { ...current, starting_balance: 0, updated_at: new Date().toISOString() });
+    }
+  }
+
   // CATEGORIES
   static async getCategories(userId?: string): Promise<Category[]> {
     const supabase = getSupabaseAdmin();

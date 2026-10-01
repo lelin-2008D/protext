@@ -355,6 +355,7 @@ export async function clearLocalDB(): Promise<void> {
   const db = await getDB();
   await db.clear('transactions');
   await db.clear('settings');
+  await db.clear('categories');
   await db.clear('syncQueue');
   try {
     if (db.objectStoreNames.contains('friends')) {

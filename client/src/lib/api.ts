@@ -224,6 +224,41 @@ export class ApiService {
     return data.data;
   }
 
+  static async deleteUserData(resetSettings: boolean): Promise<void> {
+    if (isSupabaseConfigured && supabase) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error: entriesError } = await supabase.from('friend_money_entries').delete().eq('user_id', user.id);
+      if (entriesError) throw new Error(entriesError.message);
+      const { error: friendsError } = await supabase.from('friends').delete().eq('user_id', user.id);
+      if (friendsError) throw new Error(friendsError.message);
+      const { error: transactionsError } = await supabase.from('transactions').delete().eq('user_id', user.id);
+      if (transactionsError) throw new Error(transactionsError.message);
+      const { error: categoriesError } = await supabase.from('categories').delete().eq('user_id', user.id);
+      if (categoriesError) throw new Error(categoriesError.message);
+
+      if (resetSettings) {
+        const { error } = await supabase.from('settings').update({ starting_balance: 0, currency: 'NPR', theme: 'light' }).eq('user_id', user.id);
+        if (error) throw new Error(error.message);
+      } else {
+        const { error } = await supabase.from('settings').update({ starting_balance: 0 }).eq('user_id', user.id);
+        if (error) throw new Error(error.message);
+      }
+      return;
+    }
+
+    const res = await fetch(`${API_BASE}/api/settings/data`, {
+      method: 'DELETE',
+      headers: this.getHeaders(),
+      body: JSON.stringify({ resetSettings })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to clear account data');
+    }
+  }
+
   // Categories
   static async getCategories(): Promise<Category[]> {
     if (isSupabaseConfigured && supabase) {
@@ -509,4 +544,3 @@ export class ApiService {
     }
   }
 }
-

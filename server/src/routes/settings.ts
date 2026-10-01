@@ -11,7 +11,27 @@ const updateSettingsSchema = z.object({
   theme: z.enum(['light', 'dark', 'system']).optional()
 });
 
+const clearDataSchema = z.object({
+  resetSettings: z.boolean().default(false)
+});
+
 router.use(requireAuth);
+
+// DELETE /api/settings/data
+router.delete('/data', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const validation = clearDataSchema.safeParse(req.body || {});
+    if (!validation.success) {
+      res.status(400).json({ success: false, error: 'Invalid data reset request' });
+      return;
+    }
+
+    await StoreService.clearUserData(req.user!.id, validation.data.resetSettings);
+    res.status(200).json({ success: true, data: { message: 'User data cleared' } });
+  } catch (error) {
+    next(error);
+  }
+});
 
 // GET /api/settings
 router.get('/', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
