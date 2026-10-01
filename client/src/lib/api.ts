@@ -3,6 +3,19 @@ import { supabase, isSupabaseConfigured } from './supabase.js';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? '' : 'http://localhost:5000');
 
+export function isMissingTableError(error: any): boolean {
+  if (!error) return false;
+  const msg = (error.message || '').toLowerCase();
+  const code = error.code || '';
+  return (
+    code === 'PGRST205' ||
+    code === '42P01' ||
+    msg.includes('schema cache') ||
+    msg.includes('does not exist') ||
+    msg.includes('could not find the table')
+  );
+}
+
 export class ApiService {
   private static authToken: string | null = null;
 
@@ -229,21 +242,59 @@ export class ApiService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { error: entriesError } = await supabase.from('friend_money_entries').delete().eq('user_id', user.id);
-      if (entriesError) throw new Error(entriesError.message);
-      const { error: friendsError } = await supabase.from('friends').delete().eq('user_id', user.id);
-      if (friendsError) throw new Error(friendsError.message);
-      const { error: transactionsError } = await supabase.from('transactions').delete().eq('user_id', user.id);
-      if (transactionsError) throw new Error(transactionsError.message);
-      const { error: categoriesError } = await supabase.from('categories').delete().eq('user_id', user.id);
-      if (categoriesError) throw new Error(categoriesError.message);
+      // 1. Delete friend money entries (child records)
+      try {
+        const { error: entriesError } = await supabase.from('friend_money_entries').delete().eq('user_id', user.id);
+        if (entriesError && !isMissingTableError(entriesError)) {
+          throw new Error(entriesError.message);
+        }
+      } catch (err: any) {
+        if (!isMissingTableError(err)) throw err;
+      }
 
+      // 2. Delete friends (parent records)
+      try {
+        const { error: friendsError } = await supabase.from('friends').delete().eq('user_id', user.id);
+        if (friendsError && !isMissingTableError(friendsError)) {
+          throw new Error(friendsError.message);
+        }
+      } catch (err: any) {
+        if (!isMissingTableError(err)) throw err;
+      }
+
+      // 3. Delete transactions
+      const { error: transactionsError } = await supabase.from('transactions').delete().eq('user_id', user.id);
+      if (transactionsError && !isMissingTableError(transactionsError)) {
+        throw new Error(transactionsError.message);
+      }
+
+      // 4. Delete custom categories only (user_id = user.id)
+      const { error: categoriesError } = await supabase.from('categories').delete().eq('user_id', user.id);
+      if (categoriesError && !isMissingTableError(categoriesError)) {
+        throw new Error(categoriesError.message);
+      }
+
+      // 5. Reset settings
       if (resetSettings) {
-        const { error } = await supabase.from('settings').update({ starting_balance: 0, currency: 'NPR', theme: 'light' }).eq('user_id', user.id);
-        if (error) throw new Error(error.message);
+        const { error } = await supabase
+          .from('settings')
+          .update({
+            starting_balance: 0,
+            currency: 'NPR',
+            theme: 'light',
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id);
+        if (error && !isMissingTableError(error)) throw new Error(error.message);
       } else {
-        const { error } = await supabase.from('settings').update({ starting_balance: 0 }).eq('user_id', user.id);
-        if (error) throw new Error(error.message);
+        const { error } = await supabase
+          .from('settings')
+          .update({
+            starting_balance: 0,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id);
+        if (error && !isMissingTableError(error)) throw new Error(error.message);
       }
       return;
     }

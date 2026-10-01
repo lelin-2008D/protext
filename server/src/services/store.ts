@@ -262,21 +262,59 @@ export class StoreService {
   static async clearUserData(userId: string, resetSettings: boolean): Promise<void> {
     const supabase = getSupabaseAdmin();
     if (supabase) {
-      const { error: entriesError } = await supabase.from('friend_money_entries').delete().eq('user_id', userId);
-      if (entriesError) throw new Error(entriesError.message);
-      const { error: friendsError } = await supabase.from('friends').delete().eq('user_id', userId);
-      if (friendsError) throw new Error(friendsError.message);
+      const isMissingTable = (error: any) => {
+        if (!error) return false;
+        const msg = (error.message || '').toLowerCase();
+        const code = error.code || '';
+        return (
+          code === 'PGRST205' ||
+          code === '42P01' ||
+          msg.includes('schema cache') ||
+          msg.includes('does not exist') ||
+          msg.includes('could not find the table')
+        );
+      };
+
+      try {
+        const { error: entriesError } = await supabase.from('friend_money_entries').delete().eq('user_id', userId);
+        if (entriesError && !isMissingTable(entriesError)) throw new Error(entriesError.message);
+      } catch (err: any) {
+        if (!isMissingTable(err)) throw err;
+      }
+
+      try {
+        const { error: friendsError } = await supabase.from('friends').delete().eq('user_id', userId);
+        if (friendsError && !isMissingTable(friendsError)) throw new Error(friendsError.message);
+      } catch (err: any) {
+        if (!isMissingTable(err)) throw err;
+      }
+
       const { error: transactionsError } = await supabase.from('transactions').delete().eq('user_id', userId);
-      if (transactionsError) throw new Error(transactionsError.message);
+      if (transactionsError && !isMissingTable(transactionsError)) throw new Error(transactionsError.message);
+
       const { error: categoriesError } = await supabase.from('categories').delete().eq('user_id', userId);
-      if (categoriesError) throw new Error(categoriesError.message);
+      if (categoriesError && !isMissingTable(categoriesError)) throw new Error(categoriesError.message);
 
       if (resetSettings) {
-        const { error } = await supabase.from('settings').update({ starting_balance: 0, currency: 'NPR', theme: 'light' }).eq('user_id', userId);
-        if (error) throw new Error(error.message);
+        const { error } = await supabase
+          .from('settings')
+          .update({
+            starting_balance: 0,
+            currency: 'NPR',
+            theme: 'light',
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', userId);
+        if (error && !isMissingTable(error)) throw new Error(error.message);
       } else {
-        const { error } = await supabase.from('settings').update({ starting_balance: 0 }).eq('user_id', userId);
-        if (error) throw new Error(error.message);
+        const { error } = await supabase
+          .from('settings')
+          .update({
+            starting_balance: 0,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', userId);
+        if (error && !isMissingTable(error)) throw new Error(error.message);
       }
       return;
     }

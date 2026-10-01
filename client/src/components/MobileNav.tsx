@@ -8,7 +8,7 @@ interface MobileNavProps {
 
 export const MobileNav: React.FC<MobileNavProps> = ({ activeTab, setActiveTab }) => {
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-100/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 pb-safe">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 finance-glass backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 pb-safe">
       <div className="flex items-center justify-around h-16 px-2 max-w-lg mx-auto">
         {/* Dashboard Tab */}
         <button
@@ -41,7 +41,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ activeTab, setActiveTab })
           onClick={() => setActiveTab('add')}
           className="flex flex-col items-center justify-center -mt-6 group focus:outline-none"
         >
-          <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-600/30 group-active:scale-90 transition-transform p-2.5">
+          <div className="w-12 h-12 rounded-full finance-gradient-action flex items-center justify-center group-active:scale-90 transition-transform p-2.5">
             <Plus className="w-6 h-6 stroke-[2.5]" />
           </div>
           <span className="text-[10px] font-medium text-slate-600 dark:text-slate-400 mt-1">Add</span>

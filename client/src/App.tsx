@@ -38,7 +38,7 @@ const MainLayout: React.FC = () => {
   const { categories, editTransaction, deleteTransaction, addCustomCategory } = useTransactions();
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#070B14] text-slate-900 dark:text-slate-100 flex selection:bg-blue-500 selection:text-white">
+    <div className="min-h-screen bg-white dark:bg-[#050816] text-slate-900 dark:text-slate-100 flex selection:bg-blue-600 selection:text-white">
       {/* Animated HISAB Preloader */}
       <Preloader />
 

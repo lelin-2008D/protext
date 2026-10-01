@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.js';
 import { useTransactions } from '../context/TransactionContext.js';
 import { useFriendMoney } from '../context/FriendMoneyContext.js';
+import { Logo } from './Logo.js';
 
 interface PreloaderProps {
   /**
@@ -71,7 +72,7 @@ export const Preloader: React.FC<PreloaderProps> = ({
       role="status"
       aria-live="polite"
       aria-busy={!isExiting}
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 selection:bg-blue-500 selection:text-white transition-opacity duration-500 ease-out bg-slate-50/95 dark:bg-[#0B0F19]/95 backdrop-blur-xl ${
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 selection:bg-blue-500 selection:text-white transition-opacity duration-500 ease-out bg-slate-50/95 dark:bg-[#050816]/95 backdrop-blur-xl ${
         isExiting ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
     >
@@ -93,27 +94,14 @@ export const Preloader: React.FC<PreloaderProps> = ({
         {/* 1. HISAB Logo: Enlarged square emblem, subtle floating motion, shine gleam and glow */}
         <div className="relative mb-6 sm:mb-8">
           <div
-            className={`relative overflow-hidden w-20 h-20 sm:w-28 sm:h-28 rounded-[24px] sm:rounded-[32px] bg-gradient-to-br from-blue-600 via-blue-600 to-blue-700 flex items-center justify-center text-white border-2 border-blue-400/30 shadow-xl transition-all ${
+            className={`relative overflow-hidden w-20 h-20 sm:w-28 sm:h-28 rounded-[24px] sm:rounded-[32px] bg-slate-900/90 dark:bg-slate-900 border-2 border-red-500/30 flex items-center justify-center p-3 sm:p-4 shadow-xl transition-all ${
               isExiting ? 'scale-95 opacity-0' : 'animate-preloader-logo'
             }`}
           >
             {/* Shimmer / light sweep reflection */}
-            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none animate-preloader-shine" />
+            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none animate-preloader-shine" />
 
-            {/* Iconic stylized "H" with clean Rupee crossbar motif */}
-            <svg
-              viewBox="0 0 100 100"
-              className="w-10 h-10 sm:w-14 sm:h-14 fill-none stroke-current drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)]"
-              strokeWidth="11"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M30 20 L30 80" />
-              <path d="M70 20 L70 80" />
-              <path d="M30 50 L70 50" />
-              <path d="M20 35 L80 35" strokeWidth="6.5" strokeOpacity="0.8" />
-            </svg>
+            <Logo size="100%" className="w-full h-full" />
           </div>
         </div>
 

@@ -23,7 +23,7 @@ export const DashboardHeroCards: React.FC<DashboardHeroCardsProps> = ({ onOpenSt
       {/* 1. Total Balance Card */}
       <div
         onClick={onOpenStartingBalance}
-        className="relative overflow-hidden rounded-2xl bg-white dark:bg-[#0E1626] border border-slate-200 dark:border-slate-800/80 p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition cursor-pointer"
+        className="relative overflow-hidden rounded-2xl finance-surface finance-surface-hover border p-5 cursor-pointer"
       >
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Total Balance</span>
@@ -51,7 +51,7 @@ export const DashboardHeroCards: React.FC<DashboardHeroCardsProps> = ({ onOpenSt
       </div>
 
       {/* 2. Total Income Card */}
-      <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-[#0E1626] border border-slate-200 dark:border-slate-800/80 p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition">
+      <div className="relative overflow-hidden rounded-2xl finance-surface finance-surface-hover border p-5">
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Total Income</span>
           <div className="w-8 h-8 rounded-xl bg-teal-500/15 border border-teal-500/20 text-teal-500 dark:text-teal-400 flex items-center justify-center">
@@ -78,7 +78,7 @@ export const DashboardHeroCards: React.FC<DashboardHeroCardsProps> = ({ onOpenSt
       </div>
 
       {/* 3. Total Expenses Card */}
-      <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-[#0E1626] border border-slate-200 dark:border-slate-800/80 p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition">
+      <div className="relative overflow-hidden rounded-2xl finance-surface finance-surface-hover border p-5">
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Total Expenses</span>
           <div className="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/20 text-rose-500 dark:text-rose-400 flex items-center justify-center">
@@ -105,7 +105,7 @@ export const DashboardHeroCards: React.FC<DashboardHeroCardsProps> = ({ onOpenSt
       </div>
 
       {/* 4. Savings Card */}
-      <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-[#0E1626] border border-slate-200 dark:border-slate-800/80 p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition">
+      <div className="relative overflow-hidden rounded-2xl finance-surface finance-surface-hover border p-5">
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Savings</span>
           <div className="w-8 h-8 rounded-xl bg-blue-500/15 border border-blue-500/20 text-blue-500 dark:text-blue-400 flex items-center justify-center">

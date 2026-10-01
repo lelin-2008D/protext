@@ -4,17 +4,56 @@
 
 @layer base {
   :root {
-    --app-bg: #F8FAFC;
-    --card-bg: #F1F5F9;
+    --hisab-navy: #050816;
+    --hisab-blue: #2563EB;
+    --hisab-blue-dark: #1D4ED8;
+    --hisab-blue-light: #DBEAFE;
+    --hisab-gold: #B89B65;
+    --hisab-gold-light: #E8DCC5;
+    --hisab-gradient: linear-gradient(135deg, #FFFFFF 0%, #EFF6FF 50%, #E8DCC5 100%);
+    --hisab-gradient-soft: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 65%, #EFF6FF 100%);
+    --app-bg: #FFFFFF;
+    --card-bg: #FFFFFF;
+    --surface-muted: #F8FAFC;
+    --surface-input: #F8FAFC;
+    --border-color: #E2E8F0;
+    --text-main: #0F172A;
+    --text-muted: #475569;
+    --accent: #2563EB;
+    --accent-strong: #1D4ED8;
+    --accent-soft: #EFF6FF;
+    --on-gradient: #0F172A;
+    --shadow-color: rgba(15, 23, 42, 0.12);
+    --finance-gradient: var(--hisab-gradient);
   }
 
   .dark {
-    --app-bg: #0B0F19;
-    --card-bg: #111827;
+    --hisab-navy: #050816;
+    --hisab-blue: #2563EB;
+    --hisab-blue-dark: #1D4ED8;
+    --hisab-blue-light: #3B82F6;
+    --hisab-gold: #D6B98C;
+    --hisab-gold-light: #E8DCC5;
+    --hisab-gradient: linear-gradient(135deg, #050816 0%, #172554 38%, #2563EB 62%, #D6B98C 100%);
+    --hisab-gradient-soft: linear-gradient(135deg, #050816 0%, #0F172A 62%, #172554 100%);
+    --app-bg: #050816;
+    --card-bg: rgba(15, 23, 42, 0.88);
+    --surface-muted: #0F172A;
+    --surface-input: #0F172A;
+    --border-color: rgba(148, 163, 184, 0.15);
+    --text-main: #F8FAFC;
+    --text-muted: #CBD5E1;
+    --accent: #2563EB;
+    --accent-strong: #3B82F6;
+    --accent-soft: #172554;
+    --on-gradient: #F8FAFC;
+    --shadow-color: rgba(0, 0, 0, 0.28);
+    --finance-gradient: var(--hisab-gradient);
   }
 
   body {
     background-color: var(--app-bg);
+    color: var(--text-main);
     -webkit-tap-highlight-color: transparent;
     user-select: none;
     -webkit-touch-callout: none;
@@ -25,9 +64,65 @@
   }
 }
 
-/* Use a soft surface in light mode so panels do not compete with the page background. */
-:root:not(.dark) .bg-white {
-  background-color: #F1F5F9 !important;
+@layer components {
+  .finance-surface {
+    background-color: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+    box-shadow: 0 10px 28px -18px var(--shadow-color);
+  }
+
+  .finance-surface-hover {
+    transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+  }
+
+  .finance-surface-hover:hover {
+    border-color: var(--accent) !important;
+    box-shadow: 0 16px 34px -22px var(--shadow-color);
+    transform: translateY(-1px);
+  }
+
+  .finance-gradient { background: var(--finance-gradient); }
+
+  .finance-balance-card {
+    background: var(--finance-gradient);
+    box-shadow: 0 18px 34px -22px var(--shadow-color);
+  }
+
+  .finance-gradient-action {
+    background: var(--finance-gradient) !important;
+    border-color: transparent !important;
+    color: var(--on-gradient) !important;
+    box-shadow: 0 12px 24px -14px var(--shadow-color);
+  }
+
+  .finance-gradient-action:hover {
+    filter: saturate(1.08) brightness(1.03);
+    box-shadow: 0 16px 30px -16px var(--shadow-color);
+  }
+
+  .finance-glass {
+    background: color-mix(in srgb, var(--card-bg) 84%, transparent);
+    border-color: color-mix(in srgb, var(--border-color) 82%, transparent) !important;
+    backdrop-filter: blur(14px);
+  }
+}
+
+/* Keep the existing utility-driven components on one HISAB surface system. */
+:root:not(.dark) .bg-white { background-color: var(--card-bg) !important; }
+:root:not(.dark) .bg-slate-50 { background-color: var(--surface-input) !important; }
+:root:not(.dark) .bg-slate-100 { background-color: var(--surface-muted) !important; }
+:root:not(.dark) .border-slate-200, :root:not(.dark) .border-slate-100 { border-color: var(--border-color) !important; }
+.dark [class~="dark:bg-slate-900"], .dark [class~="dark:bg-[#0E1626]"] { background-color: var(--card-bg) !important; }
+.dark [class~="dark:bg-slate-800"], .dark [class~="dark:bg-slate-800/60"], .dark [class~="dark:bg-slate-800/80"] { background-color: var(--surface-muted) !important; }
+.dark [class~="dark:border-slate-800"], .dark [class~="dark:border-slate-800/80"], .dark [class~="dark:border-slate-700"] { border-color: var(--border-color) !important; }
+.dark [class~="dark:text-slate-400"] { color: var(--text-muted) !important; }
+.dark [class~="dark:text-white"], .dark [class~="dark:text-slate-100"] { color: var(--text-main) !important; }
+.dark .bg-blue-600 { background-color: var(--accent) !important; }
+.dark .text-blue-500, .dark .text-blue-600 { color: var(--accent-strong) !important; }
+.dark .border-blue-500 { border-color: var(--accent) !important; }
+
+button, input, select, textarea {
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
 /* Custom scrollbar */
@@ -39,11 +134,11 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: #B89B65;
   border-radius: 9999px;
 }
 .dark ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #2563EB;
 }
 
 /* Safe area padding utilities for iOS / iPhone */
@@ -209,4 +304,3 @@
     opacity: 1 !important;
   }
 }
-

@@ -71,7 +71,7 @@ export const DashboardQuickNLP: React.FC = () => {
       {/* Compact dashboard entry: type choice, description, and submit stay in one line. */}
       <form
         onSubmit={handleSubmit}
-        className="relative flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm shadow-slate-200/70 transition-all focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-500/10 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none"
+        className="relative flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200 finance-surface p-2 transition-all focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-500/10 dark:border-slate-800"
       >
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-300">
           <Zap className="h-4 w-4 fill-current" />
@@ -94,7 +94,7 @@ export const DashboardQuickNLP: React.FC = () => {
           type="submit"
           disabled={loading || !input.trim()}
           aria-busy={loading}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-blue-400/80 bg-blue-600 text-white shadow-[0_0_0_2px_rgba(59,130,246,0.16),0_0_16px_rgba(59,130,246,0.34)] transition duration-200 hover:-translate-y-0.5 hover:scale-105 hover:bg-blue-700 hover:shadow-[0_0_0_3px_rgba(59,130,246,0.2),0_0_22px_rgba(59,130,246,0.48)] active:scale-95 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-80 disabled:hover:translate-y-0 disabled:hover:scale-100 dark:border-blue-300/80 dark:bg-blue-600 dark:shadow-[0_0_0_2px_rgba(96,165,250,0.2),0_0_20px_rgba(59,130,246,0.48)] dark:hover:bg-blue-500 dark:hover:shadow-[0_0_0_3px_rgba(96,165,250,0.26),0_0_26px_rgba(59,130,246,0.62)]"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl finance-gradient-action transition duration-200 hover:-translate-y-0.5 hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-80 disabled:hover:translate-y-0 disabled:hover:scale-100"
           title="Add transaction"
           aria-label="Add transaction"
         >

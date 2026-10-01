@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext.js';
-import { Wallet, Mail, Lock, User, ArrowRight, Eye, EyeOff, X, CheckCircle } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Eye, EyeOff, X, CheckCircle } from 'lucide-react';
+import { Logo } from '../components/Logo.js';
 
 interface AuthPageProps {
   isOpen: boolean;
@@ -101,7 +102,7 @@ export const AuthModal: React.FC<AuthPageProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl p-6 text-center animate-in zoom-in-95 duration-150 relative">
+      <div className="w-full max-w-sm finance-surface border rounded-3xl shadow-2xl p-6 text-center animate-in zoom-in-95 duration-150 relative">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition"
@@ -109,8 +110,8 @@ export const AuthModal: React.FC<AuthPageProps> = ({ isOpen, onClose }) => {
           <X className="w-4 h-4" />
         </button>
 
-        <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white mx-auto flex items-center justify-center mb-3 shadow-lg shadow-blue-500/20">
-          <Wallet className="w-6 h-6" />
+        <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 mx-auto flex items-center justify-center mb-3 p-2 shadow-sm">
+          <Logo size={36} />
         </div>
 
         <h3 className="text-lg font-bold text-slate-900 dark:text-white">
@@ -247,7 +248,7 @@ export const AuthModal: React.FC<AuthPageProps> = ({ isOpen, onClose }) => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-98 text-white font-bold text-sm shadow-md shadow-blue-500/20 transition flex items-center justify-center gap-2 mt-1 disabled:opacity-50"
+              className="w-full py-2.5 rounded-xl finance-gradient-action active:scale-98 font-bold text-sm transition flex items-center justify-center gap-2 mt-1 disabled:opacity-50"
             >
               <span>
                 {loading

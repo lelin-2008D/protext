@@ -12,7 +12,7 @@ import {
   saveLocalFriendEntry,
   deleteLocalFriendEntry
 } from '../lib/db.js';
-import { ApiService } from '../lib/api.js';
+import { ApiService, isMissingTableError } from '../lib/api.js';
 
 interface SyncContextType {
   isOnline: boolean;
@@ -23,35 +23,7 @@ interface SyncContextType {
 
 const SyncContext = createContext<SyncContextType | undefined>(undefined);
 
-// Concurrency limit for parallel sync of independent entities
-const MAX_CONCURRENT_SYNC = 4;
 
-async function mapConcurrent<T, R>(
-  items: T[],
-  limit: number,
-  fn: (item: T) => Promise<R>
-): Promise<R[]> {
-  const results: R[] = [];
-  const executing: Promise<void>[] = [];
-
-  for (const item of items) {
-    const p = Promise.resolve().then(() => fn(item)).then(res => {
-      results.push(res);
-    });
-    executing.push(p);
-
-    if (executing.length >= limit) {
-      await Promise.race(executing);
-      for (let i = executing.length - 1; i >= 0; i--) {
-        // Remove settled promises
-        executing.splice(i, 1);
-      }
-    }
-  }
-
-  await Promise.all(executing);
-  return results;
-}
 
 export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isOnline, setIsOnline] = useState<boolean>(() => (typeof navigator !== 'undefined' ? navigator.onLine : true));
@@ -100,22 +72,37 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await bulkRemoveFromSyncQueue(redundantQueueIds);
       }
 
-      // 2. Process independent entity mutations concurrently
-      const successfulQueueIds: string[] = [];
+      // 2. Order items systematically by dependency tier
+      // Categories -> Settings -> Friends -> Friend Entries -> Transactions -> Deletions
+      const getTier = (item: any): number => {
+        if (item.action === 'delete') {
+          if (item.entity === 'friend_entry') return 6;
+          if (item.entity === 'friend') return 7;
+          return 8;
+        }
+        if (item.entity === 'category') return 1;
+        if (item.entity === 'settings') return 2;
+        if (item.entity === 'friend') return 3;
+        if (item.entity === 'friend_entry') return 4;
+        return 5; // transactions and others
+      };
 
-      await mapConcurrent(collapsedItems, MAX_CONCURRENT_SYNC, async item => {
+      const sortedItems = [...collapsedItems].sort((a, b) => getTier(a) - getTier(b));
+
+      // 3. Process ordered entity mutations with ID mapping
+      const successfulQueueIds: string[] = [];
+      const tempFriendIdMap = new Map<string, string>();
+
+      for (const item of sortedItems) {
         try {
           if (item.entity === 'transaction') {
             if (item.action === 'create') {
               const created = await ApiService.createTransaction(item.data);
               if (created && created.id) {
-                // If the created transaction was given a new ID by server/Supabase, remove tempId
                 if (item.data?.id && item.data.id !== created.id) {
                   await deleteLocalTransaction(item.data.id);
-                  await saveLocalTransaction({ ...created, _isOfflinePending: false });
-                } else {
-                  await saveLocalTransaction({ ...created, _isOfflinePending: false });
                 }
+                await saveLocalTransaction({ ...created, _isOfflinePending: false });
               }
             } else if (item.action === 'update') {
               const updated = await ApiService.updateTransaction(item.data.id, item.data);
@@ -138,11 +125,10 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const created = await ApiService.createFriend(item.data);
               if (created && created.id) {
                 if (item.data?.id && item.data.id !== created.id) {
+                  tempFriendIdMap.set(item.data.id, created.id);
                   await deleteLocalFriend(item.data.id);
-                  await saveLocalFriend({ ...created, _isOfflinePending: false });
-                } else {
-                  await saveLocalFriend({ ...created, _isOfflinePending: false });
                 }
+                await saveLocalFriend({ ...created, _isOfflinePending: false });
               }
             } else if (item.action === 'update') {
               const updated = await ApiService.updateFriend(item.data.id, item.data);
@@ -155,14 +141,18 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           } else if (item.entity === 'friend_entry') {
             if (item.action === 'create') {
-              const created = await ApiService.createFriendEntry(item.data);
+              const entryPayload = { ...item.data };
+              // Remap temporary parent friend_id if newly assigned
+              if (entryPayload.friend_id && tempFriendIdMap.has(entryPayload.friend_id)) {
+                entryPayload.friend_id = tempFriendIdMap.get(entryPayload.friend_id)!;
+              }
+
+              const created = await ApiService.createFriendEntry(entryPayload);
               if (created && created.id) {
                 if (item.data?.id && item.data.id !== created.id) {
                   await deleteLocalFriendEntry(item.data.id);
-                  await saveLocalFriendEntry({ ...created, _isOfflinePending: false });
-                } else {
-                  await saveLocalFriendEntry({ ...created, _isOfflinePending: false });
                 }
+                await saveLocalFriendEntry({ ...created, _isOfflinePending: false });
               }
             } else if (item.action === 'update') {
               const updated = await ApiService.updateFriendEntry(item.data.id, item.data);
@@ -176,13 +166,18 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
 
           successfulQueueIds.push(item.id);
-        } catch (err) {
-          console.warn('[Sync] Failed processing queue item:', item.id, err);
-          // Item stays in queue for subsequent retry
+        } catch (err: any) {
+          // If table does not exist in remote Supabase schema cache, evict item gracefully so sync does not stall forever
+          if (isMissingTableError(err)) {
+            console.warn(`[Sync] Table for entity "${item.entity}" not found in database schema cache. Evicting from queue:`, item.id);
+            successfulQueueIds.push(item.id);
+          } else {
+            console.warn('[Sync] Failed processing queue item:', item.id, err);
+          }
         }
-      });
+      }
 
-      // 3. Bulk remove all successfully processed queue items in one fast IndexedDB transaction
+      // 4. Bulk remove all successfully processed queue items in one fast IndexedDB transaction
       if (successfulQueueIds.length > 0) {
         await bulkRemoveFromSyncQueue(successfulQueueIds);
         // Dispatch sync event so TransactionContext and FriendMoneyContext update local state
@@ -201,14 +196,26 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const syncDebounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   const triggerSync = useCallback((): Promise<void> => {
-    // If a sync process is already actively running, return the existing in-flight promise
+    // Return active in-flight sync if currently running
     if (inFlightSyncPromiseRef.current) {
       return inFlightSyncPromiseRef.current;
     }
 
-    const syncPromise = executeSyncProcess().finally(() => {
-      inFlightSyncPromiseRef.current = null;
+    if (syncDebounceTimerRef.current) {
+      clearTimeout(syncDebounceTimerRef.current);
+    }
+
+    const syncPromise = new Promise<void>((resolve) => {
+      syncDebounceTimerRef.current = setTimeout(() => {
+        executeSyncProcess()
+          .finally(() => {
+            inFlightSyncPromiseRef.current = null;
+          })
+          .then(resolve);
+      }, 100);
     });
 
     inFlightSyncPromiseRef.current = syncPromise;
@@ -226,8 +233,14 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSyncStatus('offline');
     };
 
+    const handleDataReset = () => {
+      setPendingCount(0);
+      setSyncStatus(navigator.onLine ? 'synced' : 'offline');
+    };
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+    window.addEventListener('hisab-data-reset', handleDataReset);
 
     // Initial check on mount
     checkPendingQueue();
@@ -235,6 +248,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('hisab-data-reset', handleDataReset);
     };
   }, [checkPendingQueue, triggerSync]);
 

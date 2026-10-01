@@ -12,6 +12,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.js';
+import { Logo } from './Logo.js';
 
 interface SidebarProps {
   activeTab: string;
@@ -53,20 +54,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const userSubtitle = isGuest ? 'Guest Account' : (user?.email || 'Student');
 
   return (
-    <aside className="w-64 xl:w-72 bg-slate-100 dark:bg-[#070B14] border-r border-slate-200 dark:border-slate-800/80 flex flex-col justify-between shrink-0 h-screen sticky top-0 p-5 text-slate-700 dark:text-slate-300 select-none overflow-y-auto">
+    <aside className="w-64 xl:w-72 bg-slate-100/90 dark:bg-[#050816]/95 border-r border-slate-200 dark:border-slate-800/80 flex flex-col justify-between shrink-0 h-screen sticky top-0 p-5 text-slate-700 dark:text-slate-300 select-none overflow-y-auto backdrop-blur-xl">
       {/* Brand Header */}
       <div>
         <div
           onClick={() => setActiveTab('dashboard')}
           className="flex items-center gap-3 cursor-pointer group mb-8 px-2"
         >
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white shadow-lg shadow-blue-600/30 group-hover:scale-105 transition-transform">
-            <svg viewBox="0 0 100 100" className="w-5 h-5 fill-none stroke-current" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M30 20 L30 80" />
-              <path d="M70 20 L70 80" />
-              <path d="M30 50 L70 50" />
-              <path d="M20 35 L80 35" strokeWidth="7" strokeOpacity="0.8" />
-            </svg>
+          <div className="w-10 h-10 rounded-xl bg-slate-200/80 dark:bg-slate-800/80 border border-slate-300/60 dark:border-slate-700/60 flex items-center justify-center p-1.5 group-hover:scale-105 transition-transform shadow-sm">
+            <Logo size={28} />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
@@ -93,7 +89,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 }}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                   isActive
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25'
+                    ? 'finance-gradient-action text-white'
                     : 'text-slate-600 hover:text-slate-950 hover:bg-slate-200/80 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800/60'
                 }`}
               >
@@ -147,7 +143,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   }}
                   className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                     isActive
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25'
+                      ? 'finance-gradient-action text-white'
                       : 'text-slate-600 hover:text-slate-950 hover:bg-slate-200/80 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800/60'
                   }`}
                 >
@@ -163,12 +159,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Bottom Area */}
       <div className="mt-6 space-y-4">
         {/* Designed for Nepal Promo Card */}
-        <div className="relative overflow-hidden rounded-2xl bg-slate-200/80 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 border border-slate-300 dark:border-slate-800 p-4 shadow-md shadow-slate-300/30 dark:shadow-none">
+        <div className="relative overflow-hidden rounded-2xl finance-gradient border border-slate-300 dark:border-slate-800 p-4 shadow-md shadow-slate-300/30 dark:shadow-none">
           <div className="flex items-center gap-2 mb-2 text-blue-600 dark:text-blue-400">
             <Mountain className="w-5 h-5" />
           </div>
           <h4 className="text-xs font-bold text-slate-900 dark:text-white tracking-wide">Designed for Nepal</h4>
-          <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 leading-snug">Your money. Your rules.</p>
+          <p className="text-[11px] text-slate-700 dark:text-blue-100 mt-0.5 leading-snug">Your money. Your rules.</p>
         </div>
 
         {/* User Profile Card */}
@@ -177,7 +173,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 cursor-pointer transition-colors dark:bg-slate-900/80 dark:hover:bg-slate-800/80 dark:border-slate-800/80"
         >
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm">
+            <div className="w-8 h-8 rounded-full finance-gradient-action flex items-center justify-center font-bold text-xs uppercase shadow-sm">
               {displayName.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">

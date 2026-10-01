@@ -3,6 +3,7 @@ import { Search, Bell, Sun, Moon, ChevronDown, Menu, X } from 'lucide-react';
 import { useTransactions } from '../context/TransactionContext.js';
 import { useAuth } from '../context/AuthContext.js';
 import { SyncBadge } from './SyncBadge.js';
+import { Logo } from './Logo.js';
 
 interface TopHeaderProps {
   onSearchQuery?: (q: string) => void;
@@ -33,7 +34,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
   const displayName = user?.name || (user?.email ? user.email.split('@')[0] : 'Lelin Adhikari');
 
   return (
-    <header className="h-16 px-4 sm:px-6 flex items-center justify-between border-b border-slate-200 dark:border-slate-800/80 bg-slate-50/90 dark:bg-[#070B14]/80 backdrop-blur-md sticky top-0 z-30">
+    <header className="h-16 px-4 sm:px-6 flex items-center justify-between border-b border-slate-200 dark:border-slate-800/80 finance-glass sticky top-0 z-30">
       {/* Mobile Hamburger & Brand */}
       <div className="flex items-center gap-3 lg:hidden">
         <button
@@ -43,7 +44,10 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
         >
           <Menu className="w-5 h-5" />
         </button>
-        <span className="font-extrabold text-lg tracking-tight text-slate-900 dark:text-white">HISAB</span>
+        <div className="flex items-center gap-2">
+          <Logo size={24} />
+          <span className="font-extrabold text-lg tracking-tight text-slate-900 dark:text-white">HISAB</span>
+        </div>
       </div>
 
       {/* Global Search Input Bar */}
@@ -58,7 +62,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
               setSearchVal(e.target.value);
               if (onSearchQuery) onSearchQuery(e.target.value);
             }}
-            className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+          className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm finance-glass border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
           />
           {searchVal && (
             <button
@@ -120,7 +124,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
           onClick={onOpenSettings || onOpenAuthModal}
           className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700/60 transition text-xs font-semibold text-slate-800 dark:text-slate-200"
         >
-          <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center font-bold text-[10px]">
+          <div className="w-6 h-6 rounded-full finance-gradient-action flex items-center justify-center font-bold text-[10px]">
             {displayName.charAt(0).toUpperCase()}
           </div>
           <span className="hidden md:inline truncate max-w-[100px]">{displayName}</span>

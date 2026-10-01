@@ -1,7 +1,8 @@
 import React from 'react';
 import { SyncBadge } from './SyncBadge.js';
 import { useAuth } from '../context/AuthContext.js';
-import { Wallet, Sparkles, User as UserIcon, Users } from 'lucide-react';
+import { Sparkles, User as UserIcon, Users } from 'lucide-react';
+import { Logo } from './Logo.js';
 
 interface NavbarProps {
   onOpenSettings?: () => void;
@@ -20,8 +21,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, activeTab, setAc
           className="flex items-center gap-2.5 cursor-pointer"
           onClick={() => setActiveTab && setActiveTab('dashboard')}
         >
-          <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
-            <Wallet className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center p-1.5 shadow-sm">
+            <Logo size={28} />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
