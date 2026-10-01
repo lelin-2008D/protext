@@ -33,7 +33,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
   const displayName = user?.name || (user?.email ? user.email.split('@')[0] : 'Lelin Adhikari');
 
   return (
-    <header className="h-16 px-4 sm:px-6 flex items-center justify-between border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-[#070B14]/80 backdrop-blur-md sticky top-0 z-30">
+    <header className="h-16 px-4 sm:px-6 flex items-center justify-between border-b border-slate-200 dark:border-slate-800/80 bg-slate-50/90 dark:bg-[#070B14]/80 backdrop-blur-md sticky top-0 z-30">
       {/* Mobile Hamburger & Brand */}
       <div className="flex items-center gap-3 lg:hidden">
         <button

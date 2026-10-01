@@ -5,7 +5,7 @@
 @layer base {
   :root {
     --app-bg: #F8FAFC;
-    --card-bg: #FFFFFF;
+    --card-bg: #F1F5F9;
   }
 
   .dark {
@@ -23,6 +23,11 @@
   input, textarea, select {
     user-select: auto;
   }
+}
+
+/* Use a soft surface in light mode so panels do not compete with the page background. */
+:root:not(.dark) .bg-white {
+  background-color: #F1F5F9 !important;
 }
 
 /* Custom scrollbar */
@@ -204,5 +209,4 @@
     opacity: 1 !important;
   }
 }
-
 

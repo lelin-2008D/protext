@@ -53,7 +53,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const userSubtitle = isGuest ? 'Guest Account' : (user?.email || 'Student');
 
   return (
-    <aside className="w-64 xl:w-72 bg-[#0B0F19] dark:bg-[#070B14] border-r border-slate-800/80 flex flex-col justify-between shrink-0 h-screen sticky top-0 p-5 text-slate-300 select-none overflow-y-auto">
+    <aside className="w-64 xl:w-72 bg-slate-100 dark:bg-[#070B14] border-r border-slate-200 dark:border-slate-800/80 flex flex-col justify-between shrink-0 h-screen sticky top-0 p-5 text-slate-700 dark:text-slate-300 select-none overflow-y-auto">
       {/* Brand Header */}
       <div>
         <div
@@ -70,9 +70,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="font-extrabold text-xl tracking-tight text-white">HISAB</span>
+              <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white">HISAB</span>
             </div>
-            <p className="text-[11px] text-slate-400 font-medium tracking-wide">Personal Money Tracker</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium tracking-wide">Personal Money Tracker</p>
           </div>
         </div>
 
@@ -94,10 +94,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                   isActive
                     ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                    : 'text-slate-600 hover:text-slate-950 hover:bg-slate-200/80 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800/60'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`} />
                 <span>{item.label}</span>
               </button>
             );
@@ -116,9 +116,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <button
                   key={item.id}
                   onClick={item.action}
-                  className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
+                  className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-950 hover:bg-slate-200/80 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800/60 transition-colors"
                 >
-                  <Icon className="w-4 h-4 text-slate-400" />
+                  <Icon className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                   <span>{item.label}</span>
                 </button>
               );
@@ -148,10 +148,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                     isActive
                       ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                      : 'text-slate-600 hover:text-slate-950 hover:bg-slate-200/80 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800/60'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`} />
                   <span>{item.label}</span>
                 </button>
               );
@@ -163,29 +163,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Bottom Area */}
       <div className="mt-6 space-y-4">
         {/* Designed for Nepal Promo Card */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 border border-slate-800 p-4 shadow-md">
-          <div className="flex items-center gap-2 mb-2 text-blue-400">
+        <div className="relative overflow-hidden rounded-2xl bg-slate-200/80 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 border border-slate-300 dark:border-slate-800 p-4 shadow-md shadow-slate-300/30 dark:shadow-none">
+          <div className="flex items-center gap-2 mb-2 text-blue-600 dark:text-blue-400">
             <Mountain className="w-5 h-5" />
           </div>
-          <h4 className="text-xs font-bold text-white tracking-wide">Designed for Nepal</h4>
-          <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">Your money. Your rules.</p>
+          <h4 className="text-xs font-bold text-slate-900 dark:text-white tracking-wide">Designed for Nepal</h4>
+          <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 leading-snug">Your money. Your rules.</p>
         </div>
 
         {/* User Profile Card */}
         <div
           onClick={onOpenAuthModal}
-          className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800/80 cursor-pointer transition-colors"
+          className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 cursor-pointer transition-colors dark:bg-slate-900/80 dark:hover:bg-slate-800/80 dark:border-slate-800/80"
         >
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm">
               {displayName.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-bold text-white truncate">{displayName}</p>
-              <p className="text-[10px] text-slate-400 truncate">{userSubtitle}</p>
+              <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{displayName}</p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{userSubtitle}</p>
             </div>
           </div>
-          <ChevronRight className="w-4 h-4 text-slate-500 shrink-0" />
+          <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
         </div>
       </div>
     </aside>
