@@ -19,10 +19,11 @@ import { ChangePasswordModal } from './components/ChangePasswordModal.js';
 import { ResetPasswordModal } from './components/ResetPasswordModal.js';
 import { Preloader } from './components/Preloader.js';
 import { AuthModal } from './pages/AuthPage.js';
-import { Transaction } from './types/index.js';
+import { Transaction, TransactionType } from './types/index.js';
 
 const MainLayout: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [addType, setAddType] = useState<TransactionType>('expense');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isPasswordRecovery, setIsPasswordRecovery } = useAuth();
 
@@ -108,13 +109,16 @@ const MainLayout: React.FC = () => {
               onEditTransaction={tx => setEditingTransaction(tx)}
               onDeleteTransaction={tx => setDeletingTransaction(tx)}
               onOpenStartingBalance={() => setIsStartingBalanceOpen(true)}
-              onNavigateToAdd={() => setActiveTab('add')}
+              onNavigateToAdd={(type = 'expense') => {
+                setAddType(type);
+                setActiveTab('add');
+              }}
               onNavigateToFriends={() => setActiveTab('friends')}
             />
           )}
 
           {activeTab === 'add' && (
-            <AddPage onTransactionSaved={() => setActiveTab('dashboard')} />
+            <AddPage onTransactionSaved={() => setActiveTab('dashboard')} initialType={addType} />
           )}
 
           {activeTab === 'history' && (

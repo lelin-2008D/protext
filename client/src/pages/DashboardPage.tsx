@@ -9,13 +9,14 @@ import { CategoryDonutChart } from '../components/CategoryDonutChart.js';
 import { MonthlyOverviewChart } from '../components/MonthlyOverviewChart.js';
 import { BottomHighlights } from '../components/BottomHighlights.js';
 import { Transaction } from '../types/index.js';
+import { TransactionType } from '../types/index.js';
 
 interface DashboardPageProps {
   onNavigateToHistory: () => void;
   onEditTransaction: (tx: Transaction) => void;
   onDeleteTransaction: (tx: Transaction) => void;
   onOpenStartingBalance: () => void;
-  onNavigateToAdd?: () => void;
+  onNavigateToAdd?: (type?: TransactionType) => void;
   onNavigateToFriends?: () => void;
 }
 

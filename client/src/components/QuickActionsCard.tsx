@@ -1,9 +1,10 @@
 import React from 'react';
 import { Plus, Zap, ArrowLeftRight, TrendingDown, TrendingUp } from 'lucide-react';
+import { TransactionType } from '../types/index.js';
 
 interface QuickActionsCardProps {
-  onAddExpense?: () => void;
-  onAddIncome?: () => void;
+  onAddExpense?: (type?: TransactionType) => void;
+  onAddIncome?: (type?: TransactionType) => void;
   onTransferOrFriend?: () => void;
 }
 
@@ -22,7 +23,7 @@ export const QuickActionsCard: React.FC<QuickActionsCardProps> = ({
       <div className="space-y-2.5">
         {/* Add Expense Button */}
         <button
-          onClick={onAddExpense}
+          onClick={() => onAddExpense?.('expense')}
           className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-[#121E32]/70 hover:bg-slate-100 dark:hover:bg-[#152540] border border-slate-200 dark:border-slate-800/80 group transition-all text-left"
         >
           <div className="flex items-center gap-3">
@@ -39,7 +40,7 @@ export const QuickActionsCard: React.FC<QuickActionsCardProps> = ({
 
         {/* Add Income Button */}
         <button
-          onClick={onAddIncome}
+          onClick={() => onAddIncome?.('income')}
           className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-[#121E32]/70 hover:bg-slate-100 dark:hover:bg-[#152540] border border-slate-200 dark:border-slate-800/80 group transition-all text-left"
         >
           <div className="flex items-center gap-3">

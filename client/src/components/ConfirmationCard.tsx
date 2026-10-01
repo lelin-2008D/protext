@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ParsedTransaction, Category, TransactionType } from '../types/index.js';
 import { Check, Edit3, X, AlertTriangle, Sparkles, Tag, Calendar, DollarSign, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
@@ -21,6 +21,15 @@ export const ConfirmationCard: React.FC<ConfirmationCardProps> = ({
   const [category, setCategory] = useState<string>(parsed.category);
   const [description, setDescription] = useState<string>(parsed.description);
   const [date, setDate] = useState<string>(parsed.date);
+
+  useEffect(() => {
+    setIsEditing(false);
+    setAmount(parsed.amount);
+    setType(parsed.type);
+    setCategory(parsed.category);
+    setDescription(parsed.description);
+    setDate(parsed.date);
+  }, [parsed]);
 
   const isLowConfidence = parsed.confidence < 0.70;
 

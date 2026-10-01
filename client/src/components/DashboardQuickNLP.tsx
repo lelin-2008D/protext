@@ -5,7 +5,9 @@ import { useSync } from '../context/SyncContext.js';
 import { parseLocalInput } from '../lib/parserLocal.js';
 import { ApiService } from '../lib/api.js';
 import { ConfirmationCard } from './ConfirmationCard.js';
-import { ParsedTransaction } from '../types/index.js';
+import { ParsedTransaction, TransactionType } from '../types/index.js';
+import { applyPreferredType } from '../lib/transactionInput.js';
+import { TransactionTypeToggle } from './TransactionTypeToggle.js';
 
 export const DashboardQuickNLP: React.FC = () => {
   const { categories, addTransaction } = useTransactions();
@@ -14,6 +16,7 @@ export const DashboardQuickNLP: React.FC = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [parsedResult, setParsedResult] = useState<ParsedTransaction | null>(null);
+  const [preferredType, setPreferredType] = useState<TransactionType>('expense');
 
   const handleSubmit = async (e?: React.FormEvent, customText?: string) => {
     if (e) e.preventDefault();
@@ -32,9 +35,9 @@ export const DashboardQuickNLP: React.FC = () => {
       } else {
         result = parseLocalInput(raw, categories);
       }
-      setParsedResult(result);
+      setParsedResult(applyPreferredType(result, categories, preferredType));
     } catch {
-      setParsedResult(parseLocalInput(raw, categories));
+      setParsedResult(applyPreferredType(parseLocalInput(raw, categories), categories, preferredType));
     } finally {
       setLoading(false);
     }
@@ -64,6 +67,9 @@ export const DashboardQuickNLP: React.FC = () => {
 
   return (
     <div className="w-full space-y-3">
+      <div className="max-w-sm">
+        <TransactionTypeToggle value={preferredType} onChange={setPreferredType} label="Quick add as" />
+      </div>
       {/* Sleek NLP Input Container: Perfect contrast in both Dark and Light themes */}
       <form
         onSubmit={handleSubmit}

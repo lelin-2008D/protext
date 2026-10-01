@@ -1,12 +1,14 @@
 import React from 'react';
 import { NaturalLanguageInput } from '../components/NaturalLanguageInput.js';
 import { Sparkles, CheckCircle2 } from 'lucide-react';
+import { TransactionType } from '../types/index.js';
 
 interface AddPageProps {
   onTransactionSaved: () => void;
+  initialType?: TransactionType;
 }
 
-export const AddPage: React.FC<AddPageProps> = ({ onTransactionSaved }) => {
+export const AddPage: React.FC<AddPageProps> = ({ onTransactionSaved, initialType = 'expense' }) => {
   return (
     <div className="max-w-xl mx-auto space-y-6 pb-20 md:pb-8 animate-in fade-in duration-200">
       <div className="text-center pt-2">
@@ -19,7 +21,7 @@ export const AddPage: React.FC<AddPageProps> = ({ onTransactionSaved }) => {
         </p>
       </div>
 
-      <NaturalLanguageInput onTransactionSaved={onTransactionSaved} />
+      <NaturalLanguageInput onTransactionSaved={onTransactionSaved} initialType={initialType} />
 
       {/* Helper tips */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 text-xs text-slate-600 dark:text-slate-400 space-y-2.5">

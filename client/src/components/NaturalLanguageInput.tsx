@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, ArrowRight, CornerDownLeft, Loader2 } from 'lucide-react';
-import { ParsedTransaction } from '../types/index.js';
+import { ParsedTransaction, TransactionType } from '../types/index.js';
 import { parseLocalInput } from '../lib/parserLocal.js';
 import { ApiService } from '../lib/api.js';
 import { ConfirmationCard } from './ConfirmationCard.js';
 import { useTransactions } from '../context/TransactionContext.js';
 import { useSync } from '../context/SyncContext.js';
+import { applyPreferredType } from '../lib/transactionInput.js';
+import { TransactionTypeToggle } from './TransactionTypeToggle.js';
 
 interface NaturalLanguageInputProps {
   onTransactionSaved?: () => void;
   compact?: boolean;
+  initialType?: TransactionType;
 }
 
 const EXAMPLE_PHRASES = [
@@ -26,7 +29,8 @@ const EXAMPLE_PHRASES = [
 
 export const NaturalLanguageInput: React.FC<NaturalLanguageInputProps> = ({
   onTransactionSaved,
-  compact = false
+  compact = false,
+  initialType = 'expense'
 }) => {
   const { categories, addTransaction } = useTransactions();
   const { isOnline } = useSync();
@@ -35,16 +39,17 @@ export const NaturalLanguageInput: React.FC<NaturalLanguageInputProps> = ({
   const [loading, setLoading] = useState(false);
   const [parsedResult, setParsedResult] = useState<ParsedTransaction | null>(null);
   const [livePreview, setLivePreview] = useState<ParsedTransaction | null>(null);
+  const [preferredType, setPreferredType] = useState<TransactionType>(initialType);
 
   // Instant real-time typing preview
   useEffect(() => {
     if (input.trim().length > 1) {
-      const preview = parseLocalInput(input, categories);
+      const preview = applyPreferredType(parseLocalInput(input, categories), categories, preferredType);
       setLivePreview(preview.amount > 0 ? preview : null);
     } else {
       setLivePreview(null);
     }
-  }, [input, categories]);
+  }, [input, categories, preferredType]);
 
   const handleParse = async (textToParse?: string) => {
     const raw = (textToParse || input).trim();
@@ -66,11 +71,11 @@ export const NaturalLanguageInput: React.FC<NaturalLanguageInputProps> = ({
         result = parseLocalInput(raw, categories);
       }
 
-      setParsedResult(result);
+      setParsedResult(applyPreferredType(result, categories, preferredType));
     } catch (err) {
       console.error('Parsing error:', err);
       // Fallback
-      setParsedResult(parseLocalInput(raw, categories));
+      setParsedResult(applyPreferredType(parseLocalInput(raw, categories), categories, preferredType));
     } finally {
       setLoading(false);
     }
@@ -131,6 +136,10 @@ export const NaturalLanguageInput: React.FC<NaturalLanguageInputProps> = ({
             <span className="text-[11px] text-slate-400 hidden sm:inline-flex items-center gap-1">
               Press <CornerDownLeft className="w-3 h-3" /> to track
             </span>
+          </div>
+
+          <div className="mb-3">
+            <TransactionTypeToggle value={preferredType} onChange={setPreferredType} label="I want to add" />
           </div>
 
           <form
