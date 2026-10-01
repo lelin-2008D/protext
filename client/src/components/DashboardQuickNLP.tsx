@@ -63,58 +63,38 @@ export const DashboardQuickNLP: React.FC = () => {
     }
   };
 
-  const exampleChips = ['Lunch 250', 'Bus 40', 'Salary 15000', 'Coffee 150'];
-
   return (
     <div className="w-full space-y-3">
-      <div className="max-w-sm">
-        <TransactionTypeToggle value={preferredType} onChange={setPreferredType} label="Quick add as" />
-      </div>
-      {/* Sleek NLP Input Container: Perfect contrast in both Dark and Light themes */}
+      {/* Compact dashboard entry: type choice, description, and submit stay in one line. */}
       <form
         onSubmit={handleSubmit}
-        className="relative flex items-center gap-3 p-2.5 sm:p-3.5 rounded-2xl bg-white dark:bg-[#0E1626] border border-blue-500/40 dark:border-blue-500/30 shadow-md shadow-blue-500/5 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all"
+        className="relative flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm shadow-slate-200/70 transition-all focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-500/10 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none"
       >
-        {/* Lightning Icon Badge */}
-        <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-600/20 border border-blue-200 dark:border-blue-500/30 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-          <Zap className="w-5 h-5 fill-blue-600 dark:fill-blue-500 text-blue-600 dark:text-blue-400" />
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-300">
+          <Zap className="h-4 w-4 fill-current" />
         </div>
 
-        {/* Input Box */}
-        <div className="flex-1 min-w-0">
+        <TransactionTypeToggle value={preferredType} onChange={setPreferredType} compact />
+
+        <div className="min-w-[160px] flex-1 px-1">
           <input
             type="text"
-            placeholder="What did you spend or earn?"
+            aria-label="Quick add transaction"
+            placeholder={preferredType === 'income' ? 'What did you receive?' : 'What did you spend?'}
             value={input}
             onChange={e => setInput(e.target.value)}
-            className="w-full bg-transparent text-sm sm:text-base font-semibold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none"
+            className="h-9 w-full bg-transparent text-sm font-semibold text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500"
           />
-          <div className="flex items-center gap-2 mt-1 overflow-x-auto no-scrollbar">
-            <span className="text-[11px] text-slate-400 dark:text-slate-500 shrink-0">Try:</span>
-            {exampleChips.map(chip => (
-              <button
-                key={chip}
-                type="button"
-                onClick={() => {
-                  setInput(chip);
-                  handleSubmit(undefined, chip);
-                }}
-                className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-slate-100 hover:bg-blue-50 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-200/60 dark:border-slate-700/60 transition shrink-0"
-              >
-                {chip}
-              </button>
-            ))}
-          </div>
         </div>
 
-        {/* Plus Submit Button */}
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-500 active:scale-95 disabled:opacity-40 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-600/30 transition-all"
-          title="Parse & Add"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm shadow-blue-600/25 transition hover:bg-blue-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+          title="Add transaction"
+          aria-label="Add transaction"
         >
-          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5 stroke-[2.5]" />}
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-5 w-5 stroke-[2.5]" />}
         </button>
       </form>
 
