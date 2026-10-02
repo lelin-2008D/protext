@@ -79,7 +79,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
       </div>
 
       {/* Right Action Icons & User Profile Pill */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
         {/* Sync status */}
         <SyncBadge />
 

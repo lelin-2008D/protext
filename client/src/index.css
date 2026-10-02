@@ -289,6 +289,230 @@ button, input, select, textarea {
   will-change: left, width;
 }
 
+/* =========================================
+   SAVE TRANSACTION CELEBRATION ANIMATIONS
+   ========================================= */
+
+@keyframes saveSuccessPop {
+  0% {
+    transform: scale(0.65);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.12);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes saveCheckmarkDraw {
+  0% {
+    stroke-dashoffset: 48;
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+@keyframes savePulseRing {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+.animate-save-pop {
+  animation: saveSuccessPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.animate-save-check {
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: saveCheckmarkDraw 0.45s ease-out 0.15s forwards;
+}
+
+.animate-save-pulse {
+  animation: savePulseRing 0.9s cubic-bezier(0.2, 0.8, 0.4, 1) infinite;
+}
+
+/* =========================================
+   HISAB BUTTON ANIMATIONS
+   ========================================= */
+
+:root {
+  --animate-hisab-spin: spin 2s linear infinite;
+  --animate-hisab-wave: hisabWave 0.5s ease forwards;
+  --animate-hisab-slide-down: hisabSlideDown 0.8s ease forwards;
+  --animate-hisab-disappear: hisabDisappear 0.6s ease forwards;
+  --animate-hisab-takeoff: hisabTakeOff 0.8s linear forwards;
+  --animate-hisab-land: hisabLand 0.6s ease forwards;
+  --animate-hisab-contrail: hisabContrail 0.8s linear forwards;
+  --animate-hisab-appear: hisabAppear 1.2s ease forwards;
+}
+
+@keyframes hisabWave {
+  30% {
+    opacity: 1;
+    transform: translateY(4px);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-3px);
+    color: #ff5569;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hisabSlideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) translateX(5px) rotate(-90deg);
+    color: #ff5569;
+    filter: blur(5px);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(4px);
+    filter: blur(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hisabDisappear {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(5px) translateY(20px);
+    color: #ff5569;
+    filter: blur(5px);
+  }
+}
+
+@keyframes hisabTakeOff {
+  0% {
+    opacity: 1;
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(70px) rotate(45deg) scale(2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(160px) rotate(45deg) scale(0);
+  }
+}
+
+@keyframes hisabLand {
+  0% {
+    transform: translateX(-60px) translateY(30px) rotate(-50deg) scale(2);
+    opacity: 0;
+    filter: blur(3px);
+  }
+  100% {
+    transform: translateX(0) translateY(0) rotate(0) scale(1);
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes hisabContrail {
+  0% {
+    width: 0;
+    opacity: 1;
+  }
+  8% {
+    width: 15px;
+  }
+  60% {
+    opacity: 0.7;
+    width: 80px;
+  }
+  100% {
+    opacity: 0;
+    width: 160px;
+  }
+}
+
+@keyframes hisabAppear {
+  0% {
+    opacity: 0;
+    transform: scale(4) rotate(-40deg);
+    color: #ff5569;
+    filter: blur(4px);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(0.6);
+    filter: blur(1px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-hisab-spin {
+  animation: spin 2s linear infinite;
+}
+
+.animate-hisab-wave {
+  animation: hisabWave 0.5s ease forwards;
+}
+
+.animate-hisab-slide-down {
+  animation: hisabSlideDown 0.8s ease forwards;
+}
+
+.animate-hisab-disappear {
+  animation: hisabDisappear 0.6s ease forwards;
+}
+
+.animate-hisab-takeoff {
+  animation: hisabTakeOff 0.8s linear forwards;
+}
+
+.animate-hisab-land {
+  animation: hisabLand 0.6s ease forwards;
+}
+
+.animate-hisab-contrail {
+  animation: hisabContrail 0.8s linear forwards;
+}
+
+.animate-hisab-appear {
+  animation: hisabAppear 1.2s ease forwards;
+}
+
 /* Accessibility: Respect Reduced Motion Preferences */
 @media (prefers-reduced-motion: reduce) {
   .animate-preloader-logo,
@@ -297,10 +521,22 @@ button, input, select, textarea {
   .animate-preloader-text,
   .animate-preloader-subtitle,
   .animate-preloader-bar,
-  .animate-preloader-progress-smooth {
+  .animate-preloader-progress-smooth,
+  .animate-save-pop,
+  .animate-save-check,
+  .animate-save-pulse,
+  .animate-hisab-spin,
+  .animate-hisab-wave,
+  .animate-hisab-slide-down,
+  .animate-hisab-disappear,
+  .animate-hisab-takeoff,
+  .animate-hisab-land,
+  .animate-hisab-contrail,
+  .animate-hisab-appear {
     animation: none !important;
     transform: none !important;
     filter: none !important;
     opacity: 1 !important;
   }
 }
+

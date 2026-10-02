@@ -89,12 +89,12 @@ export const DashboardRecentTransactions: React.FC<DashboardRecentTransactionsPr
 
       {hasTransactions ? (
         <>
-          {/* Table Header Row */}
-          <div className="grid grid-cols-12 gap-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 pb-2.5 border-b border-slate-100 dark:border-slate-800/80">
-            <div className="col-span-5 sm:col-span-4">Description</div>
-            <div className="col-span-3 sm:col-span-3">Date</div>
-            <div className="col-span-2 sm:col-span-3 text-center sm:text-left">Category</div>
-            <div className="col-span-2 sm:col-span-2 text-right">Amount</div>
+          {/* Table Header Row (Hidden on mobile to eliminate text compression, shown on sm+) */}
+          <div className="hidden sm:grid sm:grid-cols-12 gap-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 pb-2.5 border-b border-slate-100 dark:border-slate-800/80">
+            <div className="sm:col-span-4">Description</div>
+            <div className="sm:col-span-3">Date</div>
+            <div className="sm:col-span-3">Category</div>
+            <div className="sm:col-span-2 text-right">Amount</div>
           </div>
 
           {/* Transaction Rows */}
@@ -108,33 +108,43 @@ export const DashboardRecentTransactions: React.FC<DashboardRecentTransactionsPr
                 <div
                   key={tx.id}
                   onClick={() => onEditTransaction && onEditTransaction(tx)}
-                  className="grid grid-cols-12 gap-2 items-center px-3 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/40 transition cursor-pointer group"
+                  className="flex items-center justify-between gap-3 px-3 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/40 transition cursor-pointer group sm:grid sm:grid-cols-12 sm:gap-3 sm:items-center"
                 >
-                  {/* Description + Icon */}
-                  <div className="col-span-5 sm:col-span-4 flex items-center gap-3 min-w-0">
-                    <div className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center border ${theme.bg}`}>
+                  {/* Description + Icon (+ mobile date/category) */}
+                  <div className="flex items-center gap-3 min-w-0 sm:col-span-4">
+                    <div className={`w-9 h-9 sm:w-8 sm:h-8 rounded-xl shrink-0 flex items-center justify-center border ${theme.bg}`}>
                       <Icon className="w-4 h-4" />
                     </div>
-                    <span className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
-                      {tx.description}
-                    </span>
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
+                        {tx.description}
+                      </p>
+                      {/* Mobile secondary row: Category & Date */}
+                      <div className="flex sm:hidden items-center gap-1.5 mt-0.5 text-[11px] text-slate-400">
+                        <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full border ${theme.pillBg}`}>
+                          {tx.category_name || 'General'}
+                        </span>
+                        <span>•</span>
+                        <span className="truncate">{formatRowDate(tx.date)}</span>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Date */}
-                  <div className="col-span-3 sm:col-span-3 text-[11px] sm:text-xs text-slate-400 truncate">
+                  {/* Desktop Date */}
+                  <div className="hidden sm:block sm:col-span-3 text-[11px] sm:text-xs text-slate-400 truncate">
                     {formatRowDate(tx.date)}
                   </div>
 
-                  {/* Category Pill */}
-                  <div className="col-span-2 sm:col-span-3">
-                    <span className={`inline-block text-[10px] sm:text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${theme.pillBg} truncate max-w-[100px]`}>
+                  {/* Desktop Category Pill */}
+                  <div className="hidden sm:block sm:col-span-3">
+                    <span className={`inline-block text-[10px] sm:text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${theme.pillBg} truncate max-w-[120px]`}>
                       {tx.category_name || 'General'}
                     </span>
                   </div>
 
-                  {/* Amount */}
-                  <div className="col-span-2 sm:col-span-2 text-right">
-                    <span className={`text-xs sm:text-sm font-bold tracking-tight ${isIncome ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
+                  {/* Amount (Single line, right aligned, never compressed) */}
+                  <div className="text-right shrink-0 sm:col-span-2">
+                    <span className={`text-xs sm:text-sm font-bold tracking-tight whitespace-nowrap ${isIncome ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
                       {isIncome ? '+ ' : '- '}Rs. {tx.amount.toLocaleString('en-IN')}
                     </span>
                   </div>

@@ -42,9 +42,9 @@ export const MobileNav: React.FC<MobileNavProps> = ({ activeTab, setActiveTab })
           className="flex flex-col items-center justify-center -mt-6 group focus:outline-none"
         >
           <div className="w-12 h-12 rounded-full finance-gradient-action flex items-center justify-center group-active:scale-90 transition-transform p-2.5">
-            <Plus className="w-6 h-6 stroke-[2.5]" />
+            <Plus className="w-6 h-6 stroke-[2.5] group-hover:animate-hisab-wave" />
           </div>
-          <span className="text-[10px] font-medium text-slate-600 dark:text-slate-400 mt-1">Add</span>
+          <span className="text-[10px] font-medium text-slate-600 dark:text-slate-400 mt-1 group-hover:animate-hisab-wave">Add</span>
         </button>
 
         {/* Friends Tab */}

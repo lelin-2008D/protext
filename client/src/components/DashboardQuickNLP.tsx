@@ -71,35 +71,46 @@ export const DashboardQuickNLP: React.FC = () => {
       {/* Compact dashboard entry: type choice, description, and submit stay in one line. */}
       <form
         onSubmit={handleSubmit}
-        className="relative flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200 finance-surface p-2 transition-all focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-500/10 dark:border-slate-800"
+        className="relative flex flex-col sm:flex-row sm:items-center gap-2 rounded-2xl border border-slate-200 finance-surface p-2.5 sm:p-2 transition-all focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-500/10 dark:border-slate-800"
       >
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-300">
-          <Zap className="h-4 w-4 fill-current" />
+        {/* On mobile: row with icon, title and the Expense/Income toggle */}
+        <div className="flex items-center justify-between sm:justify-start gap-2">
+          <div className="flex items-center gap-2">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-300">
+              <Zap className="h-4 w-4 fill-current" />
+            </div>
+            <span className="sm:hidden text-xs font-bold text-slate-700 dark:text-slate-200">
+              Quick Entry
+            </span>
+          </div>
+
+          <TransactionTypeToggle value={preferredType} onChange={setPreferredType} compact />
         </div>
 
-        <TransactionTypeToggle value={preferredType} onChange={setPreferredType} compact />
+        {/* Input and submit action button */}
+        <div className="flex items-center gap-2 flex-1 min-w-0 bg-slate-50/70 dark:bg-slate-800/40 sm:bg-transparent sm:dark:bg-transparent rounded-xl px-2 sm:px-0 py-0.5 sm:py-0">
+          <div className="flex-1 px-1">
+            <input
+              type="text"
+              aria-label="Quick add transaction"
+              placeholder={preferredType === 'income' ? 'What did you receive?' : 'What did you spend?'}
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              className="h-9 w-full bg-transparent text-sm font-semibold text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500"
+            />
+          </div>
 
-        <div className="min-w-[160px] flex-1 px-1">
-          <input
-            type="text"
-            aria-label="Quick add transaction"
-            placeholder={preferredType === 'income' ? 'What did you receive?' : 'What did you spend?'}
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            className="h-9 w-full bg-transparent text-sm font-semibold text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500"
-          />
+          <button
+            type="submit"
+            disabled={loading || !input.trim()}
+            aria-busy={loading}
+            className="group flex h-9 w-9 shrink-0 items-center justify-center rounded-xl finance-gradient-action transition duration-200 hover:-translate-y-0.5 hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-80 disabled:hover:translate-y-0 disabled:hover:scale-100"
+            title="Add transaction"
+            aria-label="Add transaction"
+          >
+            <Plus className={`h-5 w-5 stroke-[2.5] transition-transform duration-300 ${spinning || loading ? 'animate-hisab-spin' : 'group-hover:animate-hisab-wave'}`} />
+          </button>
         </div>
-
-        <button
-          type="submit"
-          disabled={loading || !input.trim()}
-          aria-busy={loading}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl finance-gradient-action transition duration-200 hover:-translate-y-0.5 hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-80 disabled:hover:translate-y-0 disabled:hover:scale-100"
-          title="Add transaction"
-          aria-label="Add transaction"
-        >
-          <Plus className={`h-5 w-5 stroke-[2.5] transition-transform duration-500 ${spinning ? 'animate-spin' : ''}`} />
-        </button>
       </form>
 
       {/* Confirmation Card on parse */}

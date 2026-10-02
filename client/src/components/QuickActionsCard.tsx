@@ -28,10 +28,10 @@ export const QuickActionsCard: React.FC<QuickActionsCardProps> = ({
         >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-500 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Plus className="w-4 h-4" />
+              <Plus className="w-4 h-4 group-hover:animate-hisab-wave" />
             </div>
             <div>
-              <p className="text-xs font-bold text-slate-900 dark:text-white">Add Expense</p>
+              <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:animate-hisab-wave">Add Expense</p>
               <p className="text-[10px] text-slate-500 dark:text-slate-400">Track your spending</p>
             </div>
           </div>
@@ -45,10 +45,10 @@ export const QuickActionsCard: React.FC<QuickActionsCardProps> = ({
         >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-blue-500/15 text-blue-500 dark:text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Plus className="w-4 h-4" />
+              <Plus className="w-4 h-4 group-hover:animate-hisab-wave" />
             </div>
             <div>
-              <p className="text-xs font-bold text-slate-900 dark:text-white">Add Income</p>
+              <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:animate-hisab-wave">Add Income</p>
               <p className="text-[10px] text-slate-500 dark:text-slate-400">Record your earnings</p>
             </div>
           </div>
@@ -62,10 +62,10 @@ export const QuickActionsCard: React.FC<QuickActionsCardProps> = ({
         >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-purple-500/15 text-purple-500 dark:text-purple-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <ArrowLeftRight className="w-4 h-4" />
+              <ArrowLeftRight className="w-4 h-4 group-hover:animate-hisab-wave" />
             </div>
             <div>
-              <p className="text-xs font-bold text-slate-900 dark:text-white">Transfer</p>
+              <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:animate-hisab-wave">Transfer</p>
               <p className="text-[10px] text-slate-500 dark:text-slate-400">Move money between accounts</p>
             </div>
           </div>

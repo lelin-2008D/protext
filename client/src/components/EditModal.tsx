@@ -182,17 +182,22 @@ export const EditModal: React.FC<EditModalProps> = ({
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-1.5"
+              className="group relative overflow-hidden flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-1.5"
             >
-              <Check className="w-4 h-4" />
-              <span>{saving ? 'Saving...' : 'Save Changes'}</span>
+              {saving && (
+                <span className="absolute left-6 h-0.5 bg-gradient-to-r from-transparent via-blue-200 to-white animate-hisab-contrail" />
+              )}
+              <Check className={`w-4 h-4 ${saving ? 'animate-hisab-takeoff' : 'group-hover:animate-hisab-wave'}`} />
+              <span className={`inline-block ${saving ? 'animate-hisab-disappear' : 'group-hover:animate-hisab-wave'}`}>
+                {saving ? 'Saving...' : 'Save Changes'}
+              </span>
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm transition"
+              className="group py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm transition"
             >
-              Cancel
+              <span className="group-hover:animate-hisab-wave inline-block">Cancel</span>
             </button>
           </div>
         </form>

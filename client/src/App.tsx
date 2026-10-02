@@ -87,6 +87,7 @@ const MainLayout: React.FC = () => {
                 setIsAuthOpen(true);
                 setMobileMenuOpen(false);
               }}
+              onClose={() => setMobileMenuOpen(false)}
             />
           </div>
         </div>
