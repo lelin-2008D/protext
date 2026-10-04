@@ -18,6 +18,7 @@ import {
   clearLocalDB
 } from '../lib/db.js';
 import { DEFAULT_CLIENT_CATEGORIES } from '../lib/parserLocal.js';
+import { playTransactionSavedSound } from '../utils/sounds.js';
 
 interface CategoryTotal {
   name: string;
@@ -364,6 +365,7 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
           setTransactions(prev => prev.map(t => (t.id === tempId ? created : t)));
           await deleteLocalTransaction(tempId);
           await saveLocalTransaction(created);
+          playTransactionSavedSound();
           return created;
         } catch (err) {
           console.warn('[TransactionContext] Online creation failed, enqueuing for background sync:', err);
@@ -383,6 +385,7 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
         });
       }
 
+      playTransactionSavedSound();
       return newTx;
     },
     [user, isOnline]
