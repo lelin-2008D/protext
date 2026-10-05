@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS public.settings (
     starting_balance NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
     currency TEXT NOT NULL DEFAULT 'NPR',
     theme TEXT NOT NULL DEFAULT 'light',
+    transaction_saved_sound_enabled BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -139,8 +140,8 @@ BEGIN
     );
 
     -- Create default settings
-    INSERT INTO public.settings (user_id, starting_balance, currency, created_at, updated_at)
-    VALUES (NEW.id, 0.00, 'NPR', NOW(), NOW());
+    INSERT INTO public.settings (user_id, starting_balance, currency, transaction_saved_sound_enabled, created_at, updated_at)
+    VALUES (NEW.id, 0.00, 'NPR', true, NOW(), NOW());
 
     RETURN NEW;
 END;
@@ -151,6 +152,9 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+ALTER TABLE public.settings
+    ADD COLUMN IF NOT EXISTS transaction_saved_sound_enabled BOOLEAN NOT NULL DEFAULT true;
 
 -- DEFAULT GLOBAL / SYSTEM CATEGORIES SEED
 INSERT INTO public.categories (user_id, name, type, keywords, icon, color, is_default)

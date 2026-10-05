@@ -190,11 +190,11 @@ export class ApiService {
     if (isSupabaseConfigured && supabase) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        return { user_id: 'guest', starting_balance: 0, currency: 'NPR', theme: 'light' };
+        return { user_id: 'guest', starting_balance: 0, currency: 'NPR', theme: 'light', transaction_saved_sound_enabled: true };
       }
       const { data, error } = await supabase.from('settings').select('*').eq('user_id', user.id).single();
       if (error && error.code !== 'PGRST116') throw new Error(error.message);
-      return data || { user_id: user.id, starting_balance: 0, currency: 'NPR', theme: 'light' };
+      return data || { user_id: user.id, starting_balance: 0, currency: 'NPR', theme: 'light', transaction_saved_sound_enabled: true };
     }
 
     const res = await fetch(`${API_BASE}/api/settings`, {
@@ -282,6 +282,7 @@ export class ApiService {
             starting_balance: 0,
             currency: 'NPR',
             theme: 'light',
+            transaction_saved_sound_enabled: true,
             updated_at: new Date().toISOString()
           })
           .eq('user_id', user.id);

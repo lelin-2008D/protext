@@ -198,7 +198,7 @@ export class StoreService {
       // If settings row not found, create default
       const { data: created, error: insertError } = await supabase
         .from('settings')
-        .insert({ user_id: userId, starting_balance: 0.00, currency: 'NPR', theme: 'light' })
+        .insert({ user_id: userId, starting_balance: 0.00, currency: 'NPR', theme: 'light', transaction_saved_sound_enabled: true })
         .select()
         .single();
 
@@ -217,6 +217,7 @@ export class StoreService {
         starting_balance: 0,
         currency: 'NPR',
         theme: 'light',
+        transaction_saved_sound_enabled: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -302,6 +303,7 @@ export class StoreService {
             starting_balance: 0,
             currency: 'NPR',
             theme: 'light',
+            transaction_saved_sound_enabled: true,
             updated_at: new Date().toISOString()
           })
           .eq('user_id', userId);

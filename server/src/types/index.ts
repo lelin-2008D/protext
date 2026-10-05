@@ -43,6 +43,7 @@ export interface UserSettings {
   starting_balance: number;
   currency: string;
   theme: string;
+  transaction_saved_sound_enabled?: boolean;
   created_at?: string;
   updated_at?: string;
 }
