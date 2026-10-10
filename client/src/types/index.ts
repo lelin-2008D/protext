@@ -48,7 +48,6 @@ export interface UserSettings {
   starting_balance: number;
   currency: string;
   theme: 'light' | 'dark' | 'system';
-  transaction_saved_sound_enabled?: boolean;
   created_at?: string;
   updated_at?: string;
 }
@@ -94,4 +93,54 @@ export interface FriendSummary {
   totalReturned: number;
   remaining: number;
   entriesCount: number;
+}
+
+export type ShoppingListStatus = 'active' | 'completed' | 'archived';
+export type ShoppingItemStatus = 'pending' | 'purchased';
+
+export interface ShoppingList {
+  id: string;
+  user_id: string;
+  title: string;
+  description?: string | null;
+  status: ShoppingListStatus;
+  created_at?: string;
+  updated_at?: string;
+  // Offline sync metadata
+  _isOfflinePending?: boolean;
+  _isDeleted?: boolean;
+}
+
+export interface ShoppingItem {
+  id: string;
+  list_id: string;
+  user_id: string;
+  name: string;
+  quantity: number;
+  unit?: string | null;
+  estimated_unit_price?: number | null;
+  actual_unit_price?: number | null;
+  notes?: string | null;
+  status: ShoppingItemStatus;
+  purchase_date?: string | null;
+  transaction_id?: string | null;
+  category_id?: string | null;
+  category_name?: string | null;
+  sort_order?: number;
+  created_at?: string;
+  updated_at?: string;
+  // Offline sync metadata
+  _isOfflinePending?: boolean;
+  _isDeleted?: boolean;
+}
+
+export interface ShoppingListSummary {
+  list: ShoppingList;
+  totalItems: number;
+  purchasedItemsCount: number;
+  pendingItemsCount: number;
+  estimatedTotal: number;
+  actualPurchasedTotal: number;
+  remainingEstimatedTotal: number;
+  progressPercentage: number;
 }

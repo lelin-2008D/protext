@@ -8,8 +8,7 @@ const router = Router();
 const updateSettingsSchema = z.object({
   starting_balance: z.number().min(0, 'Starting balance cannot be negative').optional(),
   currency: z.string().min(1).max(10).optional(),
-  theme: z.enum(['light', 'dark', 'system']).optional(),
-  transaction_saved_sound_enabled: z.boolean().optional()
+  theme: z.enum(['light', 'dark', 'system']).optional()
 });
 
 const clearDataSchema = z.object({

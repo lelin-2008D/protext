@@ -1,10 +1,10 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
-import { Transaction, UserSettings, Category, Friend, FriendMoneyEntry } from '../types/index.js';
+import { Transaction, UserSettings, Category, Friend, FriendMoneyEntry, ShoppingList, ShoppingItem } from '../types/index.js';
 
 export interface SyncQueueItem {
   id: string;
   action: 'create' | 'update' | 'delete';
-  entity: 'transaction' | 'settings' | 'category' | 'friend' | 'friend_entry';
+  entity: 'transaction' | 'settings' | 'category' | 'friend' | 'friend_entry' | 'shopping_list' | 'shopping_item';
   data?: any;
   timestamp: number;
 }
@@ -43,6 +43,22 @@ interface HisabDB extends DBSchema {
       'by-date': string;
     };
   };
+  shopping_lists: {
+    key: string;
+    value: ShoppingList;
+    indexes: {
+      'by-user': string;
+    };
+  };
+  shopping_items: {
+    key: string;
+    value: ShoppingItem;
+    indexes: {
+      'by-list': string;
+      'by-user': string;
+      'by-transaction': string;
+    };
+  };
   syncQueue: {
     key: string;
     value: SyncQueueItem;
@@ -53,7 +69,7 @@ interface HisabDB extends DBSchema {
 }
 
 const DB_NAME = 'hisab_db';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 let dbPromise: Promise<IDBPDatabase<HisabDB>> | null = null;
 
@@ -91,6 +107,20 @@ export function getDB(): Promise<IDBPDatabase<HisabDB>> {
           entryStore.createIndex('by-friend', 'friend_id');
           entryStore.createIndex('by-user', 'user_id');
           entryStore.createIndex('by-date', 'date');
+        }
+
+        // Shopping Lists Store
+        if (!db.objectStoreNames.contains('shopping_lists')) {
+          const listStore = db.createObjectStore('shopping_lists', { keyPath: 'id' });
+          listStore.createIndex('by-user', 'user_id');
+        }
+
+        // Shopping Items Store
+        if (!db.objectStoreNames.contains('shopping_items')) {
+          const itemStore = db.createObjectStore('shopping_items', { keyPath: 'id' });
+          itemStore.createIndex('by-list', 'list_id');
+          itemStore.createIndex('by-user', 'user_id');
+          itemStore.createIndex('by-transaction', 'transaction_id');
         }
 
         // Sync Queue Store
@@ -351,6 +381,88 @@ export async function deleteLocalFriendEntriesByFriend(friendId: string): Promis
   await tx.done;
 }
 
+// SHOPPING LISTS LOCAL CACHE HELPERS
+export async function getLocalShoppingLists(userId: string): Promise<ShoppingList[]> {
+  const db = await getDB();
+  const all = await db.getAllFromIndex('shopping_lists', 'by-user', userId);
+  return all
+    .filter(l => !l._isDeleted)
+    .sort((a, b) => (b.updated_at || b.created_at || '') > (a.updated_at || a.created_at || '') ? 1 : -1);
+}
+
+export async function saveLocalShoppingList(list: ShoppingList): Promise<void> {
+  const db = await getDB();
+  await db.put('shopping_lists', list);
+}
+
+export async function saveLocalShoppingLists(lists: ShoppingList[]): Promise<void> {
+  if (!lists || lists.length === 0) return;
+  const db = await getDB();
+  const tx = db.transaction('shopping_lists', 'readwrite');
+  for (const item of lists) {
+    await tx.store.put(item);
+  }
+  await tx.done;
+}
+
+export async function deleteLocalShoppingList(id: string): Promise<void> {
+  const db = await getDB();
+  await db.delete('shopping_lists', id);
+  // Clean up associated items locally
+  await deleteLocalShoppingItemsByList(id);
+}
+
+// SHOPPING ITEMS LOCAL CACHE HELPERS
+export async function getLocalShoppingItems(userId: string, listId?: string): Promise<ShoppingItem[]> {
+  const db = await getDB();
+  let items: ShoppingItem[] = [];
+  if (listId) {
+    items = await db.getAllFromIndex('shopping_items', 'by-list', listId);
+  } else {
+    items = await db.getAllFromIndex('shopping_items', 'by-user', userId);
+  }
+  return items
+    .filter(i => !i._isDeleted && i.user_id === userId)
+    .sort((a, b) => ((a.sort_order ?? 0) - (b.sort_order ?? 0)) || (a.name.localeCompare(b.name)));
+}
+
+export async function getLocalShoppingItemByTransactionId(transactionId: string): Promise<ShoppingItem | undefined> {
+  const db = await getDB();
+  const items = await db.getAllFromIndex('shopping_items', 'by-transaction', transactionId);
+  return items.find(i => !i._isDeleted);
+}
+
+export async function saveLocalShoppingItem(item: ShoppingItem): Promise<void> {
+  const db = await getDB();
+  await db.put('shopping_items', item);
+}
+
+export async function saveLocalShoppingItems(items: ShoppingItem[]): Promise<void> {
+  if (!items || items.length === 0) return;
+  const db = await getDB();
+  const tx = db.transaction('shopping_items', 'readwrite');
+  for (const item of items) {
+    await tx.store.put(item);
+  }
+  await tx.done;
+}
+
+export async function deleteLocalShoppingItem(id: string): Promise<void> {
+  const db = await getDB();
+  await db.delete('shopping_items', id);
+}
+
+export async function deleteLocalShoppingItemsByList(listId: string): Promise<void> {
+  const db = await getDB();
+  const items = await db.getAllFromIndex('shopping_items', 'by-list', listId);
+  if (items.length === 0) return;
+  const tx = db.transaction('shopping_items', 'readwrite');
+  for (const item of items) {
+    await tx.store.delete(item.id);
+  }
+  await tx.done;
+}
+
 export async function clearLocalDB(): Promise<void> {
   const db = await getDB();
   await db.clear('transactions');
@@ -364,7 +476,14 @@ export async function clearLocalDB(): Promise<void> {
     if (db.objectStoreNames.contains('friend_entries')) {
       await db.clear('friend_entries');
     }
+    if (db.objectStoreNames.contains('shopping_lists')) {
+      await db.clear('shopping_lists');
+    }
+    if (db.objectStoreNames.contains('shopping_items')) {
+      await db.clear('shopping_items');
+    }
   } catch {
     // ignore
   }
 }
+

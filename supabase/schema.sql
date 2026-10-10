@@ -18,7 +18,6 @@ CREATE TABLE IF NOT EXISTS public.settings (
     starting_balance NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
     currency TEXT NOT NULL DEFAULT 'NPR',
     theme TEXT NOT NULL DEFAULT 'light',
-    transaction_saved_sound_enabled BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -140,8 +139,8 @@ BEGIN
     );
 
     -- Create default settings
-    INSERT INTO public.settings (user_id, starting_balance, currency, transaction_saved_sound_enabled, created_at, updated_at)
-    VALUES (NEW.id, 0.00, 'NPR', true, NOW(), NOW());
+    INSERT INTO public.settings (user_id, starting_balance, currency, created_at, updated_at)
+    VALUES (NEW.id, 0.00, 'NPR', NOW(), NOW());
 
     RETURN NEW;
 END;
@@ -152,9 +151,6 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-
-ALTER TABLE public.settings
-    ADD COLUMN IF NOT EXISTS transaction_saved_sound_enabled BOOLEAN NOT NULL DEFAULT true;
 
 -- DEFAULT GLOBAL / SYSTEM CATEGORIES SEED
 INSERT INTO public.categories (user_id, name, type, keywords, icon, color, is_default)
@@ -244,3 +240,80 @@ CREATE POLICY "Users can update own friend money entries"
 CREATE POLICY "Users can delete own friend money entries"
     ON public.friend_money_entries FOR DELETE
     USING (auth.uid() = user_id);
+
+-- 7. SHOPPING LISTS TABLE
+CREATE TABLE IF NOT EXISTS public.shopping_lists (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT,
+    status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed', 'archived')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- 8. SHOPPING ITEMS TABLE
+CREATE TABLE IF NOT EXISTS public.shopping_items (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    list_id UUID NOT NULL REFERENCES public.shopping_lists(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    quantity NUMERIC(10, 2) NOT NULL DEFAULT 1 CHECK (quantity > 0),
+    unit TEXT,
+    estimated_unit_price NUMERIC(12, 2) CHECK (estimated_unit_price IS NULL OR estimated_unit_price >= 0),
+    actual_unit_price NUMERIC(12, 2) CHECK (actual_unit_price IS NULL OR actual_unit_price >= 0),
+    notes TEXT,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'purchased')),
+    purchase_date DATE,
+    transaction_id UUID REFERENCES public.transactions(id) ON DELETE SET NULL,
+    category_id UUID REFERENCES public.categories(id) ON DELETE SET NULL,
+    category_name TEXT DEFAULT 'Shopping',
+    sort_order INT DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- INDEXES for Shopping Lists & Shopping Items
+CREATE INDEX IF NOT EXISTS idx_shopping_lists_user_id ON public.shopping_lists(user_id);
+CREATE INDEX IF NOT EXISTS idx_shopping_items_list_id ON public.shopping_items(list_id);
+CREATE INDEX IF NOT EXISTS idx_shopping_items_user_id ON public.shopping_items(user_id);
+CREATE INDEX IF NOT EXISTS idx_shopping_items_transaction_id ON public.shopping_items(transaction_id);
+
+-- ENABLE ROW LEVEL SECURITY (RLS) FOR SHOPPING
+ALTER TABLE public.shopping_lists ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.shopping_items ENABLE ROW LEVEL SECURITY;
+
+-- POLICIES FOR SHOPPING LISTS
+CREATE POLICY "Users can view own shopping lists"
+    ON public.shopping_lists FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own shopping lists"
+    ON public.shopping_lists FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own shopping lists"
+    ON public.shopping_lists FOR UPDATE
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own shopping lists"
+    ON public.shopping_lists FOR DELETE
+    USING (auth.uid() = user_id);
+
+-- POLICIES FOR SHOPPING ITEMS
+CREATE POLICY "Users can view own shopping items"
+    ON public.shopping_items FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own shopping items"
+    ON public.shopping_items FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own shopping items"
+    ON public.shopping_items FOR UPDATE
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own shopping items"
+    ON public.shopping_items FOR DELETE
+    USING (auth.uid() = user_id);
+

@@ -1,4 +1,4 @@
-import { Transaction, UserSettings, Category, Friend, FriendMoneyEntry } from '../types/index.js';
+import { Transaction, UserSettings, Category, Friend, FriendMoneyEntry, ShoppingList, ShoppingItem } from '../types/index.js';
 import { getSupabaseAdmin } from './supabase.js';
 import { DEFAULT_CATEGORIES } from './parser/ruleParser.js';
 
@@ -8,6 +8,8 @@ const memorySettings = new Map<string, UserSettings>();
 const memoryCategories = new Map<string, Category[]>();
 const memoryFriends = new Map<string, Friend[]>();
 const memoryFriendEntries = new Map<string, FriendMoneyEntry[]>();
+const memoryShoppingLists = new Map<string, ShoppingList[]>();
+const memoryShoppingItems = new Map<string, ShoppingItem[]>();
 
 export class StoreService {
   // TRANSACTIONS
@@ -198,7 +200,7 @@ export class StoreService {
       // If settings row not found, create default
       const { data: created, error: insertError } = await supabase
         .from('settings')
-        .insert({ user_id: userId, starting_balance: 0.00, currency: 'NPR', theme: 'light', transaction_saved_sound_enabled: true })
+        .insert({ user_id: userId, starting_balance: 0.00, currency: 'NPR', theme: 'light' })
         .select()
         .single();
 
@@ -217,7 +219,6 @@ export class StoreService {
         starting_balance: 0,
         currency: 'NPR',
         theme: 'light',
-        transaction_saved_sound_enabled: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -303,7 +304,6 @@ export class StoreService {
             starting_balance: 0,
             currency: 'NPR',
             theme: 'light',
-            transaction_saved_sound_enabled: true,
             updated_at: new Date().toISOString()
           })
           .eq('user_id', userId);
@@ -614,6 +614,324 @@ export class StoreService {
     return true;
   }
 
+  // SHOPPING LISTS
+  static async getShoppingLists(userId: string): Promise<ShoppingList[]> {
+    const supabase = getSupabaseAdmin();
+    if (supabase) {
+      const { data, error } = await supabase
+        .from('shopping_lists')
+        .select('*')
+        .eq('user_id', userId)
+        .order('updated_at', { ascending: false });
+
+      if (error) throw new Error(error.message);
+      return data || [];
+    }
+
+    const list = memoryShoppingLists.get(userId) || [];
+    return [...list].sort((a, b) => (b.updated_at || b.created_at || '') > (a.updated_at || a.created_at || '') ? 1 : -1);
+  }
+
+  static async getShoppingListById(userId: string, id: string): Promise<ShoppingList | null> {
+    const supabase = getSupabaseAdmin();
+    if (supabase) {
+      const { data, error } = await supabase
+        .from('shopping_lists')
+        .select('*')
+        .eq('id', id)
+        .eq('user_id', userId)
+        .single();
+
+      if (error) return null;
+      return data;
+    }
+
+    const list = memoryShoppingLists.get(userId) || [];
+    return list.find(l => l.id === id) || null;
+  }
+
+  static async createShoppingList(
+    userId: string,
+    data: { title: string; description?: string | null; status?: 'active' | 'completed' | 'archived' }
+  ): Promise<ShoppingList> {
+    const supabase = getSupabaseAdmin();
+    if (supabase) {
+      const { data: created, error } = await supabase
+        .from('shopping_lists')
+        .insert({
+          user_id: userId,
+          title: data.title,
+          description: data.description || null,
+          status: data.status || 'active'
+        })
+        .select()
+        .single();
+
+      if (error) throw new Error(error.message);
+      return created;
+    }
+
+    const newList: ShoppingList = {
+      id: 'list-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now(),
+      user_id: userId,
+      title: data.title,
+      description: data.description || null,
+      status: data.status || 'active',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    const current = memoryShoppingLists.get(userId) || [];
+    memoryShoppingLists.set(userId, [newList, ...current]);
+    return newList;
+  }
+
+  static async updateShoppingList(
+    userId: string,
+    id: string,
+    updates: Partial<ShoppingList>
+  ): Promise<ShoppingList | null> {
+    const supabase = getSupabaseAdmin();
+    if (supabase) {
+      const { data, error } = await supabase
+        .from('shopping_lists')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+      if (error) throw new Error(error.message);
+      return data;
+    }
+
+    const list = memoryShoppingLists.get(userId) || [];
+    const index = list.findIndex(l => l.id === id);
+    if (index === -1) return null;
+
+    const updated: ShoppingList = {
+      ...list[index],
+      ...updates,
+      updated_at: new Date().toISOString()
+    };
+    list[index] = updated;
+    memoryShoppingLists.set(userId, list);
+    return updated;
+  }
+
+  static async deleteShoppingList(userId: string, id: string): Promise<boolean> {
+    const supabase = getSupabaseAdmin();
+    if (supabase) {
+      const { error } = await supabase
+        .from('shopping_lists')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId);
+
+      if (error) throw new Error(error.message);
+      return true;
+    }
+
+    const list = memoryShoppingLists.get(userId) || [];
+    const filtered = list.filter(l => l.id !== id);
+    if (filtered.length === list.length) return false;
+    memoryShoppingLists.set(userId, filtered);
+
+    // Also cascade delete items belonging to this list in memory
+    const items = memoryShoppingItems.get(userId) || [];
+    memoryShoppingItems.set(userId, items.filter(i => i.list_id !== id));
+
+    return true;
+  }
+
+  // SHOPPING ITEMS
+  static async getShoppingItems(userId: string, listId?: string): Promise<ShoppingItem[]> {
+    const supabase = getSupabaseAdmin();
+    if (supabase) {
+      let query = supabase
+        .from('shopping_items')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (listId) {
+        query = query.eq('list_id', listId);
+      }
+
+      const { data, error } = await query
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: true });
+
+      if (error) throw new Error(error.message);
+      return (data || []).map(i => ({
+        ...i,
+        quantity: Number(i.quantity),
+        estimated_unit_price: i.estimated_unit_price !== null && i.estimated_unit_price !== undefined ? Number(i.estimated_unit_price) : null,
+        actual_unit_price: i.actual_unit_price !== null && i.actual_unit_price !== undefined ? Number(i.actual_unit_price) : null
+      }));
+    }
+
+    let items = memoryShoppingItems.get(userId) || [];
+    if (listId) {
+      items = items.filter(i => i.list_id === listId);
+    }
+    return [...items].sort((a, b) => ((a.sort_order ?? 0) - (b.sort_order ?? 0)) || (a.name.localeCompare(b.name)));
+  }
+
+  static async getShoppingItemById(userId: string, id: string): Promise<ShoppingItem | null> {
+    const supabase = getSupabaseAdmin();
+    if (supabase) {
+      const { data, error } = await supabase
+        .from('shopping_items')
+        .select('*')
+        .eq('id', id)
+        .eq('user_id', userId)
+        .single();
+
+      if (error) return null;
+      return {
+        ...data,
+        quantity: Number(data.quantity),
+        estimated_unit_price: data.estimated_unit_price !== null && data.estimated_unit_price !== undefined ? Number(data.estimated_unit_price) : null,
+        actual_unit_price: data.actual_unit_price !== null && data.actual_unit_price !== undefined ? Number(data.actual_unit_price) : null
+      };
+    }
+
+    const items = memoryShoppingItems.get(userId) || [];
+    return items.find(i => i.id === id) || null;
+  }
+
+  static async createShoppingItem(
+    userId: string,
+    data: Omit<ShoppingItem, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+  ): Promise<ShoppingItem> {
+    const supabase = getSupabaseAdmin();
+    if (supabase) {
+      const { data: created, error } = await supabase
+        .from('shopping_items')
+        .insert({
+          list_id: data.list_id,
+          user_id: userId,
+          name: data.name,
+          quantity: data.quantity,
+          unit: data.unit || null,
+          estimated_unit_price: data.estimated_unit_price ?? null,
+          actual_unit_price: data.actual_unit_price ?? null,
+          notes: data.notes || null,
+          status: data.status || 'pending',
+          purchase_date: data.purchase_date || null,
+          transaction_id: data.transaction_id || null,
+          category_id: data.category_id || null,
+          category_name: data.category_name || 'Shopping',
+          sort_order: data.sort_order ?? 0
+        })
+        .select()
+        .single();
+
+      if (error) throw new Error(error.message);
+      return {
+        ...created,
+        quantity: Number(created.quantity),
+        estimated_unit_price: created.estimated_unit_price !== null && created.estimated_unit_price !== undefined ? Number(created.estimated_unit_price) : null,
+        actual_unit_price: created.actual_unit_price !== null && created.actual_unit_price !== undefined ? Number(created.actual_unit_price) : null
+      };
+    }
+
+    const newItem: ShoppingItem = {
+      id: 'item-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now(),
+      list_id: data.list_id,
+      user_id: userId,
+      name: data.name,
+      quantity: Number(data.quantity),
+      unit: data.unit || null,
+      estimated_unit_price: data.estimated_unit_price !== undefined && data.estimated_unit_price !== null ? Number(data.estimated_unit_price) : null,
+      actual_unit_price: data.actual_unit_price !== undefined && data.actual_unit_price !== null ? Number(data.actual_unit_price) : null,
+      notes: data.notes || null,
+      status: data.status || 'pending',
+      purchase_date: data.purchase_date || null,
+      transaction_id: data.transaction_id || null,
+      category_id: data.category_id || null,
+      category_name: data.category_name || 'Shopping',
+      sort_order: data.sort_order ?? 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    const items = memoryShoppingItems.get(userId) || [];
+    memoryShoppingItems.set(userId, [...items, newItem]);
+    return newItem;
+  }
+
+  static async updateShoppingItem(
+    userId: string,
+    id: string,
+    updates: Partial<ShoppingItem>
+  ): Promise<ShoppingItem | null> {
+    const supabase = getSupabaseAdmin();
+    if (supabase) {
+      const { data, error } = await supabase
+        .from('shopping_items')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+      if (error) throw new Error(error.message);
+      return {
+        ...data,
+        quantity: Number(data.quantity),
+        estimated_unit_price: data.estimated_unit_price !== null && data.estimated_unit_price !== undefined ? Number(data.estimated_unit_price) : null,
+        actual_unit_price: data.actual_unit_price !== null && data.actual_unit_price !== undefined ? Number(data.actual_unit_price) : null
+      };
+    }
+
+    const items = memoryShoppingItems.get(userId) || [];
+    const index = items.findIndex(i => i.id === id);
+    if (index === -1) return null;
+
+    const updated: ShoppingItem = {
+      ...items[index],
+      ...updates,
+      quantity: updates.quantity !== undefined ? Number(updates.quantity) : items[index].quantity,
+      estimated_unit_price: updates.estimated_unit_price !== undefined
+        ? (updates.estimated_unit_price !== null ? Number(updates.estimated_unit_price) : null)
+        : items[index].estimated_unit_price,
+      actual_unit_price: updates.actual_unit_price !== undefined
+        ? (updates.actual_unit_price !== null ? Number(updates.actual_unit_price) : null)
+        : items[index].actual_unit_price,
+      updated_at: new Date().toISOString()
+    };
+    items[index] = updated;
+    memoryShoppingItems.set(userId, items);
+    return updated;
+  }
+
+  static async deleteShoppingItem(userId: string, id: string): Promise<boolean> {
+    const supabase = getSupabaseAdmin();
+    if (supabase) {
+      const { error } = await supabase
+        .from('shopping_items')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId);
+
+      if (error) throw new Error(error.message);
+      return true;
+    }
+
+    const items = memoryShoppingItems.get(userId) || [];
+    const filtered = items.filter(i => i.id !== id);
+    if (filtered.length === items.length) return false;
+    memoryShoppingItems.set(userId, filtered);
+    return true;
+  }
+
   // Clear memory for test isolation
   static clearMemory() {
     memoryTransactions.clear();
@@ -621,5 +939,8 @@ export class StoreService {
     memoryCategories.clear();
     memoryFriends.clear();
     memoryFriendEntries.clear();
+    memoryShoppingLists.clear();
+    memoryShoppingItems.clear();
   }
 }
+

@@ -18,6 +18,7 @@ interface DashboardPageProps {
   onOpenStartingBalance: () => void;
   onNavigateToAdd?: (type?: TransactionType) => void;
   onNavigateToFriends?: () => void;
+  onNavigateToShopping?: () => void;
 }
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({
@@ -26,7 +27,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   onDeleteTransaction,
   onOpenStartingBalance,
   onNavigateToAdd,
-  onNavigateToFriends
+  onNavigateToFriends,
+  onNavigateToShopping
 }) => {
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-300">
@@ -56,11 +58,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
         {/* Right Column (Quick Actions, Spending Donut, Monthly Area Overview) */}
         <div className="lg:col-span-5 space-y-6">
-          {/* Quick Actions (Add Expense, Add Income, Transfer) */}
+          {/* Quick Actions (Add Expense, Add Income, Transfer, Shopping) */}
           <QuickActionsCard
             onAddExpense={onNavigateToAdd}
             onAddIncome={onNavigateToAdd}
             onTransferOrFriend={onNavigateToFriends}
+            onNavigateToShopping={onNavigateToShopping}
           />
 
           {/* Category Spending Donut Chart with Breakdown Legend */}

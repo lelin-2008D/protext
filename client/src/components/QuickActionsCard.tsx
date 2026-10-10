@@ -1,17 +1,19 @@
 import React from 'react';
-import { Plus, Zap, ArrowLeftRight, TrendingDown, TrendingUp } from 'lucide-react';
+import { Plus, Zap, ArrowLeftRight, TrendingDown, TrendingUp, ShoppingBag } from 'lucide-react';
 import { TransactionType } from '../types/index.js';
 
 interface QuickActionsCardProps {
   onAddExpense?: (type?: TransactionType) => void;
   onAddIncome?: (type?: TransactionType) => void;
   onTransferOrFriend?: () => void;
+  onNavigateToShopping?: () => void;
 }
 
 export const QuickActionsCard: React.FC<QuickActionsCardProps> = ({
   onAddExpense,
   onAddIncome,
-  onTransferOrFriend
+  onTransferOrFriend,
+  onNavigateToShopping
 }) => {
   return (
     <div className="rounded-2xl bg-white dark:bg-[#0E1626] border border-slate-200 dark:border-slate-800/80 p-5 shadow-sm">
@@ -65,11 +67,28 @@ export const QuickActionsCard: React.FC<QuickActionsCardProps> = ({
               <ArrowLeftRight className="w-4 h-4 group-hover:animate-hisab-wave" />
             </div>
             <div>
-              <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:animate-hisab-wave">Transfer</p>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400">Move money between accounts</p>
+              <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:animate-hisab-wave">Friend Loans</p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400">Track who owes what</p>
             </div>
           </div>
           <ArrowLeftRight className="w-4 h-4 text-slate-400 group-hover:text-purple-400 transition" />
+        </button>
+
+        {/* Shopping Planner Button */}
+        <button
+          onClick={onNavigateToShopping}
+          className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-[#121E32]/70 hover:bg-slate-100 dark:hover:bg-[#152540] border border-slate-200 dark:border-slate-800/80 group transition-all text-left"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-pink-500/15 text-pink-500 dark:text-pink-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <ShoppingBag className="w-4 h-4 group-hover:animate-hisab-wave" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:animate-hisab-wave">Shopping Planner</p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400">Plan lists & track market expenses</p>
+            </div>
+          </div>
+          <ShoppingBag className="w-4 h-4 text-slate-400 group-hover:text-pink-400 transition" />
         </button>
       </div>
     </div>

@@ -18,7 +18,6 @@ import {
   clearLocalDB
 } from '../lib/db.js';
 import { DEFAULT_CLIENT_CATEGORIES } from '../lib/parserLocal.js';
-import { playTransactionSavedSound } from '../utils/sounds.js';
 
 interface CategoryTotal {
   name: string;
@@ -44,7 +43,6 @@ interface TransactionContextType {
   deleteTransaction: (id: string) => Promise<void>;
   updateStartingBalance: (amount: number) => Promise<void>;
   updateTheme: (theme: 'light' | 'dark' | 'system') => Promise<void>;
-  updateTransactionSavedSound: (enabled: boolean) => Promise<void>;
   addCustomCategory: (cat: Omit<Category, 'id' | 'user_id'>) => Promise<void>;
   refreshData: () => Promise<void>;
   clearAllData: () => Promise<void>;
@@ -93,8 +91,7 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
     user_id: user?.id || 'guest',
     starting_balance: 0,
     currency: 'NPR',
-    theme: getInitialTheme(),
-    transaction_saved_sound_enabled: true
+    theme: getInitialTheme()
   }));
   const [loading, setLoading] = useState(true);
 
@@ -136,7 +133,7 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
       if (localSet) {
         const currentTheme = getInitialTheme();
         const resolvedTheme = localSet.theme || currentTheme;
-        setSettings({ ...localSet, theme: resolvedTheme, transaction_saved_sound_enabled: localSet.transaction_saved_sound_enabled !== false });
+        setSettings({ ...localSet, theme: resolvedTheme });
         applyThemeToDOM(resolvedTheme);
       }
 
@@ -181,9 +178,9 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
             if (remoteSet) {
               const currentTheme = getInitialTheme();
               const resolvedTheme = remoteSet.theme || currentTheme;
-              setSettings({ ...remoteSet, theme: resolvedTheme, transaction_saved_sound_enabled: remoteSet.transaction_saved_sound_enabled !== false });
+              setSettings({ ...remoteSet, theme: resolvedTheme });
               applyThemeToDOM(resolvedTheme);
-              await saveLocalSettings({ ...remoteSet, theme: resolvedTheme, transaction_saved_sound_enabled: remoteSet.transaction_saved_sound_enabled !== false });
+              await saveLocalSettings({ ...remoteSet, theme: resolvedTheme });
             }
             if (remoteCats && remoteCats.length > 0) {
               setCategories(remoteCats);
@@ -367,9 +364,6 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
           setTransactions(prev => prev.map(t => (t.id === tempId ? created : t)));
           await deleteLocalTransaction(tempId);
           await saveLocalTransaction(created);
-          if (settings.transaction_saved_sound_enabled !== false) {
-            playTransactionSavedSound();
-          }
           return created;
         } catch (err) {
           console.warn('[TransactionContext] Online creation failed, enqueuing for background sync:', err);
@@ -389,12 +383,9 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
         });
       }
 
-      if (settings.transaction_saved_sound_enabled !== false) {
-        playTransactionSavedSound();
-      }
       return newTx;
     },
-    [user, isOnline, settings.transaction_saved_sound_enabled]
+    [user, isOnline]
   );
 
   // ACTION: Edit Transaction (Optimistic & Stable Callback)
@@ -544,41 +535,6 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
     [user, settings, isOnline]
   );
 
-  const updateTransactionSavedSound = useCallback(
-    async (enabled: boolean): Promise<void> => {
-      if (!user) return;
-
-      const newSettings: UserSettings = {
-        ...settings,
-        transaction_saved_sound_enabled: enabled
-      };
-
-      setSettings(newSettings);
-      await saveLocalSettings(newSettings);
-
-      if (isOnline) {
-        try {
-          await ApiService.updateSettings({ transaction_saved_sound_enabled: enabled });
-        } catch {
-          await addToSyncQueue({
-            id: `settings-sound-${Date.now()}`,
-            action: 'update',
-            entity: 'settings',
-            data: { transaction_saved_sound_enabled: enabled }
-          });
-        }
-      } else {
-        await addToSyncQueue({
-          id: `settings-sound-${Date.now()}`,
-          action: 'update',
-          entity: 'settings',
-          data: { transaction_saved_sound_enabled: enabled }
-        });
-      }
-    },
-    [user, settings, isOnline]
-  );
-
   // ACTION: Add Custom Category
   const addCustomCategory = useCallback(
     async (cat: Omit<Category, 'id' | 'user_id'>): Promise<void> => {
@@ -627,8 +583,7 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
       ...settings,
       user_id: user.id,
       starting_balance: 0,
-      theme: resetSettings ? 'light' : settings.theme,
-      transaction_saved_sound_enabled: resetSettings ? true : settings.transaction_saved_sound_enabled
+      theme: resetSettings ? 'light' : settings.theme
     };
 
     setTransactions([]);
@@ -659,7 +614,6 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
         deleteTransaction,
         updateStartingBalance,
         updateTheme,
-        updateTransactionSavedSound,
         addCustomCategory,
         refreshData,
         clearAllData,

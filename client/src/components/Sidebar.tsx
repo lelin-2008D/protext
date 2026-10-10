@@ -7,6 +7,7 @@ import {
   LineChart,
   FileSpreadsheet,
   Users2,
+  ShoppingBag,
   Settings,
   Mountain,
   ChevronRight,
@@ -49,6 +50,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   const toolItems = [
+    { id: 'shopping', label: 'Shopping Planner', icon: ShoppingBag },
     { id: 'friends', label: 'Friend Calculator', icon: Users2 },
     { id: 'settings', label: 'Settings', icon: Settings, action: onOpenSettings },
   ];

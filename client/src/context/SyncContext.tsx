@@ -10,7 +10,11 @@ import {
   saveLocalFriend,
   deleteLocalFriend,
   saveLocalFriendEntry,
-  deleteLocalFriendEntry
+  deleteLocalFriendEntry,
+  saveLocalShoppingList,
+  deleteLocalShoppingList,
+  saveLocalShoppingItem,
+  deleteLocalShoppingItem
 } from '../lib/db.js';
 import { ApiService, isMissingTableError } from '../lib/api.js';
 
@@ -73,10 +77,12 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // 2. Order items systematically by dependency tier
-      // Categories -> Settings -> Friends -> Friend Entries -> Transactions -> Deletions
+      // Categories -> Settings -> Friends -> Friend Entries -> Shopping Lists -> Shopping Items -> Transactions -> Deletions
       const getTier = (item: any): number => {
         if (item.action === 'delete') {
-          if (item.entity === 'friend_entry') return 6;
+          if (item.entity === 'shopping_item') return 5.5;
+          if (item.entity === 'shopping_list') return 6;
+          if (item.entity === 'friend_entry') return 6.5;
           if (item.entity === 'friend') return 7;
           return 8;
         }
@@ -84,6 +90,8 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (item.entity === 'settings') return 2;
         if (item.entity === 'friend') return 3;
         if (item.entity === 'friend_entry') return 4;
+        if (item.entity === 'shopping_list') return 4.2;
+        if (item.entity === 'shopping_item') return 4.6;
         return 5; // transactions and others
       };
 
@@ -92,6 +100,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // 3. Process ordered entity mutations with ID mapping
       const successfulQueueIds: string[] = [];
       const tempFriendIdMap = new Map<string, string>();
+      const tempShoppingListIdMap = new Map<string, string>();
 
       for (const item of sortedItems) {
         try {
@@ -163,6 +172,47 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
               await ApiService.deleteFriendEntry(item.data.id);
               await deleteLocalFriendEntry(item.data.id);
             }
+          } else if (item.entity === 'shopping_list') {
+            if (item.action === 'create') {
+              const created = await ApiService.createShoppingList(item.data);
+              if (created && created.id) {
+                if (item.data?.id && item.data.id !== created.id) {
+                  tempShoppingListIdMap.set(item.data.id, created.id);
+                  await deleteLocalShoppingList(item.data.id);
+                }
+                await saveLocalShoppingList({ ...created, _isOfflinePending: false });
+              }
+            } else if (item.action === 'update') {
+              const updated = await ApiService.updateShoppingList(item.data.id, item.data);
+              if (updated) {
+                await saveLocalShoppingList({ ...updated, _isOfflinePending: false });
+              }
+            } else if (item.action === 'delete') {
+              await ApiService.deleteShoppingList(item.data.id);
+              await deleteLocalShoppingList(item.data.id);
+            }
+          } else if (item.entity === 'shopping_item') {
+            if (item.action === 'create') {
+              const itemPayload = { ...item.data };
+              if (itemPayload.list_id && tempShoppingListIdMap.has(itemPayload.list_id)) {
+                itemPayload.list_id = tempShoppingListIdMap.get(itemPayload.list_id)!;
+              }
+              const created = await ApiService.createShoppingItem(itemPayload);
+              if (created && created.id) {
+                if (item.data?.id && item.data.id !== created.id) {
+                  await deleteLocalShoppingItem(item.data.id);
+                }
+                await saveLocalShoppingItem({ ...created, _isOfflinePending: false });
+              }
+            } else if (item.action === 'update') {
+              const updated = await ApiService.updateShoppingItem(item.data.id, item.data);
+              if (updated) {
+                await saveLocalShoppingItem({ ...updated, _isOfflinePending: false });
+              }
+            } else if (item.action === 'delete') {
+              await ApiService.deleteShoppingItem(item.data.id);
+              await deleteLocalShoppingItem(item.data.id);
+            }
           }
 
           successfulQueueIds.push(item.id);
@@ -180,10 +230,11 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // 4. Bulk remove all successfully processed queue items in one fast IndexedDB transaction
       if (successfulQueueIds.length > 0) {
         await bulkRemoveFromSyncQueue(successfulQueueIds);
-        // Dispatch sync event so TransactionContext and FriendMoneyContext update local state
+        // Dispatch sync event so TransactionContext, FriendMoneyContext, and ShoppingContext update local state
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('hisab-sync-complete'));
           window.dispatchEvent(new CustomEvent('hisab-friend-sync-complete'));
+          window.dispatchEvent(new CustomEvent('hisab-shopping-sync-complete'));
         }
       }
 

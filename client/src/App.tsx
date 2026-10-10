@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext.js';
 import { SyncProvider } from './context/SyncContext.js';
 import { TransactionProvider, useTransactions } from './context/TransactionContext.js';
 import { FriendMoneyProvider } from './context/FriendMoneyContext.js';
+import { ShoppingProvider } from './context/ShoppingContext.js';
 import { Sidebar } from './components/Sidebar.js';
 import { TopHeader } from './components/TopHeader.js';
 import { MobileNav } from './components/MobileNav.js';
@@ -10,6 +11,7 @@ import { DashboardPage } from './pages/DashboardPage.js';
 import { AddPage } from './pages/AddPage.js';
 import { HistoryPage } from './pages/HistoryPage.js';
 import { FriendMoneyPage } from './pages/FriendMoneyPage.js';
+import { ShoppingPage } from './pages/ShoppingPage.js';
 import { SettingsPage } from './pages/SettingsPage.js';
 import { EditModal } from './components/EditModal.js';
 import { DeleteConfirmModal } from './components/DeleteConfirmModal.js';
@@ -115,6 +117,7 @@ const MainLayout: React.FC = () => {
                 setActiveTab('add');
               }}
               onNavigateToFriends={() => setActiveTab('friends')}
+              onNavigateToShopping={() => setActiveTab('shopping')}
             />
           )}
 
@@ -132,6 +135,10 @@ const MainLayout: React.FC = () => {
 
           {activeTab === 'friends' && (
             <FriendMoneyPage />
+          )}
+
+          {activeTab === 'shopping' && (
+            <ShoppingPage onNavigateToHistory={() => setActiveTab('history')} />
           )}
 
           {activeTab === 'settings' && (
@@ -201,7 +208,9 @@ export function App() {
       <SyncProvider>
         <TransactionProvider>
           <FriendMoneyProvider>
-            <MainLayout />
+            <ShoppingProvider>
+              <MainLayout />
+            </ShoppingProvider>
           </FriendMoneyProvider>
         </TransactionProvider>
       </SyncProvider>

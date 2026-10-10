@@ -1,4 +1,4 @@
-import { ParsedTransaction, Transaction, UserSettings, Category, Friend, FriendMoneyEntry } from '../types/index.js';
+import { ParsedTransaction, Transaction, UserSettings, Category, Friend, FriendMoneyEntry, ShoppingList, ShoppingItem } from '../types/index.js';
 import { supabase, isSupabaseConfigured } from './supabase.js';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? '' : 'http://localhost:5000');
@@ -190,11 +190,11 @@ export class ApiService {
     if (isSupabaseConfigured && supabase) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        return { user_id: 'guest', starting_balance: 0, currency: 'NPR', theme: 'light', transaction_saved_sound_enabled: true };
+        return { user_id: 'guest', starting_balance: 0, currency: 'NPR', theme: 'light' };
       }
       const { data, error } = await supabase.from('settings').select('*').eq('user_id', user.id).single();
       if (error && error.code !== 'PGRST116') throw new Error(error.message);
-      return data || { user_id: user.id, starting_balance: 0, currency: 'NPR', theme: 'light', transaction_saved_sound_enabled: true };
+      return data || { user_id: user.id, starting_balance: 0, currency: 'NPR', theme: 'light' };
     }
 
     const res = await fetch(`${API_BASE}/api/settings`, {
@@ -282,7 +282,6 @@ export class ApiService {
             starting_balance: 0,
             currency: 'NPR',
             theme: 'light',
-            transaction_saved_sound_enabled: true,
             updated_at: new Date().toISOString()
           })
           .eq('user_id', user.id);
@@ -583,8 +582,6 @@ export class ApiService {
       return;
     }
 
-    if (!API_BASE) return;
-
     const res = await fetch(`${API_BASE}/api/friends/entries/${id}`, {
       method: 'DELETE',
       headers: this.getHeaders()
@@ -595,4 +592,254 @@ export class ApiService {
       throw new Error(data.error || 'Failed to delete friend entry');
     }
   }
+
+  // SHOPPING LISTS
+  static async getShoppingLists(): Promise<ShoppingList[]> {
+    if (isSupabaseConfigured && supabase) {
+      const { data, error } = await supabase.from('shopping_lists').select('*').order('updated_at', { ascending: false });
+      if (error) throw new Error(error.message);
+      return data || [];
+    }
+
+    if (!API_BASE) return [];
+
+    try {
+      const res = await fetch(`${API_BASE}/api/shopping/lists`, {
+        method: 'GET',
+        headers: this.getHeaders()
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to fetch shopping lists');
+      }
+      return data.data || [];
+    } catch {
+      return [];
+    }
+  }
+
+  static async createShoppingList(list: Omit<ShoppingList, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<ShoppingList> {
+    if (isSupabaseConfigured && supabase) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return list as ShoppingList;
+      }
+      const payload = {
+        ...list,
+        user_id: user.id
+      };
+      const { data, error } = await supabase.from('shopping_lists').insert([payload]).select().single();
+      if (error) throw new Error(error.message);
+      return data;
+    }
+
+    if (!API_BASE) {
+      return list as ShoppingList;
+    }
+
+    const res = await fetch(`${API_BASE}/api/shopping/lists`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify(list)
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to create shopping list');
+    }
+    return data.data;
+  }
+
+  static async updateShoppingList(id: string, updates: Partial<ShoppingList>): Promise<ShoppingList> {
+    if (isSupabaseConfigured && supabase) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return { id, ...updates } as ShoppingList;
+      }
+      const { data, error } = await supabase.from('shopping_lists').update(updates).eq('id', id).select().single();
+      if (error) throw new Error(error.message);
+      return data;
+    }
+
+    if (!API_BASE) {
+      return { id, ...updates } as ShoppingList;
+    }
+
+    const res = await fetch(`${API_BASE}/api/shopping/lists/${id}`, {
+      method: 'PUT',
+      headers: this.getHeaders(),
+      body: JSON.stringify(updates)
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to update shopping list');
+    }
+    return data.data;
+  }
+
+  static async deleteShoppingList(id: string): Promise<void> {
+    if (isSupabaseConfigured && supabase) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { error } = await supabase.from('shopping_lists').delete().eq('id', id);
+      if (error) throw new Error(error.message);
+      return;
+    }
+
+    if (!API_BASE) return;
+
+    const res = await fetch(`${API_BASE}/api/shopping/lists/${id}`, {
+      method: 'DELETE',
+      headers: this.getHeaders()
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to delete shopping list');
+    }
+  }
+
+  // SHOPPING ITEMS
+  static async getShoppingItems(listId?: string): Promise<ShoppingItem[]> {
+    if (isSupabaseConfigured && supabase) {
+      let query = supabase.from('shopping_items').select('*').order('sort_order', { ascending: true }).order('created_at', { ascending: true });
+      if (listId) {
+        query = query.eq('list_id', listId);
+      }
+      const { data, error } = await query;
+      if (error) throw new Error(error.message);
+      return (data || []).map((i: any) => ({
+        ...i,
+        quantity: Number(i.quantity),
+        estimated_unit_price: i.estimated_unit_price !== null && i.estimated_unit_price !== undefined ? Number(i.estimated_unit_price) : null,
+        actual_unit_price: i.actual_unit_price !== null && i.actual_unit_price !== undefined ? Number(i.actual_unit_price) : null
+      }));
+    }
+
+    if (!API_BASE) return [];
+
+    try {
+      const url = listId ? `${API_BASE}/api/shopping/lists/${listId}/items` : `${API_BASE}/api/shopping/items`;
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: this.getHeaders()
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to fetch shopping items');
+      }
+      return (data.data || []).map((i: any) => ({
+        ...i,
+        quantity: Number(i.quantity),
+        estimated_unit_price: i.estimated_unit_price !== null && i.estimated_unit_price !== undefined ? Number(i.estimated_unit_price) : null,
+        actual_unit_price: i.actual_unit_price !== null && i.actual_unit_price !== undefined ? Number(i.actual_unit_price) : null
+      }));
+    } catch {
+      return [];
+    }
+  }
+
+  static async createShoppingItem(item: Omit<ShoppingItem, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<ShoppingItem> {
+    if (isSupabaseConfigured && supabase) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return item as ShoppingItem;
+      }
+      const payload = {
+        ...item,
+        user_id: user.id
+      };
+      const { data, error } = await supabase.from('shopping_items').insert([payload]).select().single();
+      if (error) throw new Error(error.message);
+      return {
+        ...data,
+        quantity: Number(data.quantity),
+        estimated_unit_price: data.estimated_unit_price !== null && data.estimated_unit_price !== undefined ? Number(data.estimated_unit_price) : null,
+        actual_unit_price: data.actual_unit_price !== null && data.actual_unit_price !== undefined ? Number(data.actual_unit_price) : null
+      };
+    }
+
+    if (!API_BASE) {
+      return item as ShoppingItem;
+    }
+
+    const res = await fetch(`${API_BASE}/api/shopping/lists/${item.list_id}/items`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify(item)
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to create shopping item');
+    }
+    return {
+      ...data.data,
+      quantity: Number(data.data.quantity),
+      estimated_unit_price: data.data.estimated_unit_price !== null && data.data.estimated_unit_price !== undefined ? Number(data.data.estimated_unit_price) : null,
+      actual_unit_price: data.data.actual_unit_price !== null && data.data.actual_unit_price !== undefined ? Number(data.data.actual_unit_price) : null
+    };
+  }
+
+  static async updateShoppingItem(id: string, updates: Partial<ShoppingItem>): Promise<ShoppingItem> {
+    if (isSupabaseConfigured && supabase) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return { id, ...updates } as ShoppingItem;
+      }
+      const { data, error } = await supabase.from('shopping_items').update(updates).eq('id', id).select().single();
+      if (error) throw new Error(error.message);
+      return {
+        ...data,
+        quantity: Number(data.quantity),
+        estimated_unit_price: data.estimated_unit_price !== null && data.estimated_unit_price !== undefined ? Number(data.estimated_unit_price) : null,
+        actual_unit_price: data.actual_unit_price !== null && data.actual_unit_price !== undefined ? Number(data.actual_unit_price) : null
+      };
+    }
+
+    if (!API_BASE) {
+      return { id, ...updates } as ShoppingItem;
+    }
+
+    const res = await fetch(`${API_BASE}/api/shopping/items/${id}`, {
+      method: 'PUT',
+      headers: this.getHeaders(),
+      body: JSON.stringify(updates)
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to update shopping item');
+    }
+    return {
+      ...data.data,
+      quantity: Number(data.data.quantity),
+      estimated_unit_price: data.data.estimated_unit_price !== null && data.data.estimated_unit_price !== undefined ? Number(data.data.estimated_unit_price) : null,
+      actual_unit_price: data.data.actual_unit_price !== null && data.data.actual_unit_price !== undefined ? Number(data.data.actual_unit_price) : null
+    };
+  }
+
+  static async deleteShoppingItem(id: string): Promise<void> {
+    if (isSupabaseConfigured && supabase) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { error } = await supabase.from('shopping_items').delete().eq('id', id);
+      if (error) throw new Error(error.message);
+      return;
+    }
+
+    if (!API_BASE) return;
+
+    const res = await fetch(`${API_BASE}/api/shopping/items/${id}`, {
+      method: 'DELETE',
+      headers: this.getHeaders()
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to delete shopping item');
+    }
+  }
 }
+

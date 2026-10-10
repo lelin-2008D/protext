@@ -11,6 +11,7 @@ import transactionsRoutes from './routes/transactions.js';
 import settingsRoutes from './routes/settings.js';
 import categoriesRoutes from './routes/categories.js';
 import friendsRoutes from './routes/friends.js';
+import shoppingRoutes from './routes/shopping.js';
 
 export function createApp(): Express {
   const app = express();
@@ -64,6 +65,7 @@ export function createApp(): Express {
   app.use('/api/settings', settingsRoutes);
   app.use('/api/categories', categoriesRoutes);
   app.use('/api/friends', friendsRoutes);
+  app.use('/api/shopping', shoppingRoutes);
 
   // 404 Handler
   app.use('/api/*', (req, res) => {

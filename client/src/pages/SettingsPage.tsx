@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext.js';
 import { exportTransactionsToCSV } from '../lib/export.js';
 import {
   Wallet, Sun, Moon, Monitor, Download, LogOut,
-  Plus, Sparkles, ShieldCheck, KeyRound, Trash2, RotateCcw, AlertTriangle, Volume2, VolumeX
+  Plus, Sparkles, ShieldCheck, KeyRound, Trash2, RotateCcw, AlertTriangle
 } from 'lucide-react';
 
 interface SettingsPageProps {
@@ -20,7 +20,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   onOpenAuthModal,
   onOpenChangePassword
 }) => {
-  const { settings, startingBalance, categories, transactions, updateTheme, updateTransactionSavedSound, clearAllData, resetAllData } = useTransactions();
+  const { settings, startingBalance, categories, transactions, updateTheme, clearAllData, resetAllData } = useTransactions();
   const { user, isGuest, signOut } = useAuth();
   const [workingAction, setWorkingAction] = useState<'clear' | 'reset' | null>(null);
   const [dataActionError, setDataActionError] = useState('');
@@ -223,35 +223,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
           >
             <Monitor className="w-4 h-4" />
             <span>System</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Transaction sound setting */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-              {settings.transaction_saved_sound_enabled !== false ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-900 dark:text-white">Transaction saved sound</p>
-              <p className="text-xs text-slate-400">Play a sound after a transaction is saved</p>
-            </div>
-          </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={settings.transaction_saved_sound_enabled !== false}
-            aria-label="Toggle transaction saved sound"
-            onClick={() => void updateTransactionSavedSound(settings.transaction_saved_sound_enabled === false)}
-            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 ${
-              settings.transaction_saved_sound_enabled !== false ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-700'
-            }`}
-          >
-            <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
-              settings.transaction_saved_sound_enabled !== false ? 'translate-x-5' : 'translate-x-0.5'
-            }`} />
           </button>
         </div>
       </div>
