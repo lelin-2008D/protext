@@ -77,22 +77,24 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // 2. Order items systematically by dependency tier
-      // Categories -> Settings -> Friends -> Friend Entries -> Shopping Lists -> Shopping Items -> Transactions -> Deletions
+      // Categories -> Settings -> Friends -> Friend Entries -> Transactions -> Shopping Lists -> Shopping Items -> Deletions
       const getTier = (item: any): number => {
         if (item.action === 'delete') {
           if (item.entity === 'shopping_item') return 5.5;
           if (item.entity === 'shopping_list') return 6;
           if (item.entity === 'friend_entry') return 6.5;
           if (item.entity === 'friend') return 7;
+          if (item.entity === 'transaction') return 7.5;
           return 8;
         }
         if (item.entity === 'category') return 1;
         if (item.entity === 'settings') return 2;
         if (item.entity === 'friend') return 3;
         if (item.entity === 'friend_entry') return 4;
-        if (item.entity === 'shopping_list') return 4.2;
+        if (item.entity === 'transaction') return 4.3;
+        if (item.entity === 'shopping_list') return 4.4;
         if (item.entity === 'shopping_item') return 4.6;
-        return 5; // transactions and others
+        return 5;
       };
 
       const sortedItems = [...collapsedItems].sort((a, b) => getTier(a) - getTier(b));
@@ -101,6 +103,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const successfulQueueIds: string[] = [];
       const tempFriendIdMap = new Map<string, string>();
       const tempShoppingListIdMap = new Map<string, string>();
+      const tempTransactionIdMap = new Map<string, string>();
 
       for (const item of sortedItems) {
         try {
@@ -109,6 +112,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const created = await ApiService.createTransaction(item.data);
               if (created && created.id) {
                 if (item.data?.id && item.data.id !== created.id) {
+                  tempTransactionIdMap.set(item.data.id, created.id);
                   await deleteLocalTransaction(item.data.id);
                 }
                 await saveLocalTransaction({ ...created, _isOfflinePending: false });
@@ -197,6 +201,9 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
               if (itemPayload.list_id && tempShoppingListIdMap.has(itemPayload.list_id)) {
                 itemPayload.list_id = tempShoppingListIdMap.get(itemPayload.list_id)!;
               }
+              if (itemPayload.transaction_id && tempTransactionIdMap.has(itemPayload.transaction_id)) {
+                itemPayload.transaction_id = tempTransactionIdMap.get(itemPayload.transaction_id)!;
+              }
               const created = await ApiService.createShoppingItem(itemPayload);
               if (created && created.id) {
                 if (item.data?.id && item.data.id !== created.id) {
@@ -205,7 +212,11 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 await saveLocalShoppingItem({ ...created, _isOfflinePending: false });
               }
             } else if (item.action === 'update') {
-              const updated = await ApiService.updateShoppingItem(item.data.id, item.data);
+              const updatePayload = { ...item.data };
+              if (updatePayload.transaction_id && tempTransactionIdMap.has(updatePayload.transaction_id)) {
+                updatePayload.transaction_id = tempTransactionIdMap.get(updatePayload.transaction_id)!;
+              }
+              const updated = await ApiService.updateShoppingItem(item.data.id, updatePayload);
               if (updated) {
                 await saveLocalShoppingItem({ ...updated, _isOfflinePending: false });
               }

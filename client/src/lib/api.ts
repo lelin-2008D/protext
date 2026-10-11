@@ -16,6 +16,11 @@ export function isMissingTableError(error: any): boolean {
   );
 }
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+export function isValidUuid(val?: string | null): boolean {
+  return typeof val === 'string' && UUID_REGEX.test(val);
+}
+
 export class ApiService {
   private static authToken: string | null = null;
 
@@ -110,17 +115,29 @@ export class ApiService {
     return data.data;
   }
 
-  static async createTransaction(tx: Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<Transaction> {
+  static async createTransaction(tx: Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { id?: string }): Promise<Transaction> {
     if (isSupabaseConfigured && supabase) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         // Guest mode: transaction is saved in local IndexedDB
-        return tx as Transaction;
+        return {
+          id: tx.id || 'tx-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now(),
+          ...tx,
+          user_id: 'guest',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        } as Transaction;
       }
-      const payload = {
+      const payload: any = {
         ...tx,
         user_id: user.id
       };
+      if (payload.id && !isValidUuid(payload.id)) {
+        delete payload.id;
+      }
+      if (payload.category_id && !isValidUuid(payload.category_id)) {
+        payload.category_id = null;
+      }
       const { data, error } = await supabase.from('transactions').insert([payload]).select().single();
       if (error) throw new Error(error.message);
       return data;
@@ -145,7 +162,11 @@ export class ApiService {
       if (!user) {
         return { id, ...updates } as Transaction;
       }
-      const { data, error } = await supabase.from('transactions').update(updates).eq('id', id).select().single();
+      const sanitizedUpdates = { ...updates };
+      if (sanitizedUpdates.category_id && !isValidUuid(sanitizedUpdates.category_id)) {
+        sanitizedUpdates.category_id = null;
+      }
+      const { data, error } = await supabase.from('transactions').update(sanitizedUpdates).eq('id', id).select().single();
       if (error) throw new Error(error.message);
       return data;
     }
@@ -330,16 +351,23 @@ export class ApiService {
     return data.data;
   }
 
-  static async createCategory(cat: Omit<Category, 'id' | 'user_id'>): Promise<Category> {
+  static async createCategory(cat: Omit<Category, 'id' | 'user_id'> & { id?: string }): Promise<Category> {
     if (isSupabaseConfigured && supabase) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        return cat as Category;
+        return {
+          id: cat.id || 'cat-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now(),
+          ...cat,
+          user_id: 'guest'
+        } as Category;
       }
-      const payload = {
+      const payload: any = {
         ...cat,
         user_id: user.id
       };
+      if (payload.id && !isValidUuid(payload.id)) {
+        delete payload.id;
+      }
       const { data, error } = await supabase.from('categories').insert([payload]).select().single();
       if (error) throw new Error(error.message);
       return data;
@@ -383,23 +411,38 @@ export class ApiService {
     }
   }
 
-  static async createFriend(friend: Omit<Friend, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<Friend> {
+  static async createFriend(friend: Omit<Friend, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { id?: string }): Promise<Friend> {
     if (isSupabaseConfigured && supabase) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        return friend as Friend;
+        return {
+          id: friend.id || 'friend-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now(),
+          ...friend,
+          user_id: 'guest',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        } as Friend;
       }
-      const payload = {
+      const payload: any = {
         ...friend,
         user_id: user.id
       };
+      if (payload.id && !isValidUuid(payload.id)) {
+        delete payload.id;
+      }
       const { data, error } = await supabase.from('friends').insert([payload]).select().single();
       if (error) throw new Error(error.message);
       return data;
     }
 
     if (!API_BASE) {
-      return friend as Friend;
+      return {
+        id: friend.id || 'friend-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now(),
+        ...friend,
+        user_id: 'guest',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      } as Friend;
     }
 
     const res = await fetch(`${API_BASE}/api/friends`, {
@@ -501,16 +544,26 @@ export class ApiService {
     }
   }
 
-  static async createFriendEntry(entry: Omit<FriendMoneyEntry, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<FriendMoneyEntry> {
+  static async createFriendEntry(entry: Omit<FriendMoneyEntry, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { id?: string }): Promise<FriendMoneyEntry> {
     if (isSupabaseConfigured && supabase) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        return entry as FriendMoneyEntry;
+        return {
+          id: entry.id || 'fre-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now(),
+          ...entry,
+          user_id: 'guest',
+          amount: Number(entry.amount),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        } as FriendMoneyEntry;
       }
-      const payload = {
+      const payload: any = {
         ...entry,
         user_id: user.id
       };
+      if (payload.id && !isValidUuid(payload.id)) {
+        delete payload.id;
+      }
       const { data, error } = await supabase.from('friend_money_entries').insert([payload]).select().single();
       if (error) throw new Error(error.message);
       return {
@@ -520,7 +573,14 @@ export class ApiService {
     }
 
     if (!API_BASE) {
-      return entry as FriendMoneyEntry;
+      return {
+        id: entry.id || 'fre-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now(),
+        ...entry,
+        user_id: 'guest',
+        amount: Number(entry.amount),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      } as FriendMoneyEntry;
     }
 
     const res = await fetch(`${API_BASE}/api/friends/${entry.friend_id}/entries`, {
@@ -597,7 +657,10 @@ export class ApiService {
   static async getShoppingLists(): Promise<ShoppingList[]> {
     if (isSupabaseConfigured && supabase) {
       const { data, error } = await supabase.from('shopping_lists').select('*').order('updated_at', { ascending: false });
-      if (error) throw new Error(error.message);
+      if (error) {
+        if (isMissingTableError(error)) return [];
+        throw new Error(error.message);
+      }
       return data || [];
     }
 
@@ -618,23 +681,44 @@ export class ApiService {
     }
   }
 
-  static async createShoppingList(list: Omit<ShoppingList, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<ShoppingList> {
+  static async createShoppingList(list: Omit<ShoppingList, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { id?: string }): Promise<ShoppingList> {
     if (isSupabaseConfigured && supabase) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        return list as ShoppingList;
+        return {
+          id: list.id || 'list-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now(),
+          user_id: 'guest',
+          title: list.title,
+          description: list.description || null,
+          status: list.status || 'active',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
       }
-      const payload = {
-        ...list,
+      const payload: any = {
+        title: list.title,
+        description: list.description || null,
+        status: list.status || 'active',
         user_id: user.id
       };
+      if (list.id && isValidUuid(list.id)) {
+        payload.id = list.id;
+      }
       const { data, error } = await supabase.from('shopping_lists').insert([payload]).select().single();
       if (error) throw new Error(error.message);
       return data;
     }
 
     if (!API_BASE) {
-      return list as ShoppingList;
+      return {
+        id: list.id || 'list-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now(),
+        user_id: 'guest',
+        title: list.title,
+        description: list.description || null,
+        status: list.status || 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
     }
 
     const res = await fetch(`${API_BASE}/api/shopping/lists`, {
@@ -708,7 +792,10 @@ export class ApiService {
         query = query.eq('list_id', listId);
       }
       const { data, error } = await query;
-      if (error) throw new Error(error.message);
+      if (error) {
+        if (isMissingTableError(error)) return [];
+        throw new Error(error.message);
+      }
       return (data || []).map((i: any) => ({
         ...i,
         quantity: Number(i.quantity),
@@ -740,16 +827,49 @@ export class ApiService {
     }
   }
 
-  static async createShoppingItem(item: Omit<ShoppingItem, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<ShoppingItem> {
+  static async createShoppingItem(item: Omit<ShoppingItem, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { id?: string }): Promise<ShoppingItem> {
     if (isSupabaseConfigured && supabase) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        return item as ShoppingItem;
+        return {
+          id: item.id || 'item-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now(),
+          list_id: item.list_id,
+          user_id: 'guest',
+          name: item.name,
+          quantity: item.quantity ?? 1,
+          unit: item.unit || null,
+          estimated_unit_price: item.estimated_unit_price ?? null,
+          actual_unit_price: item.actual_unit_price ?? null,
+          notes: item.notes || null,
+          status: item.status || 'pending',
+          purchase_date: item.purchase_date || null,
+          transaction_id: item.transaction_id || null,
+          category_id: (item as any).category_id || null,
+          category_name: item.category_name || 'Shopping',
+          sort_order: (item as any).sort_order ?? 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
       }
-      const payload = {
-        ...item,
-        user_id: user.id
+      const payload: any = {
+        list_id: item.list_id,
+        user_id: user.id,
+        name: item.name,
+        quantity: item.quantity ?? 1,
+        unit: item.unit || null,
+        estimated_unit_price: item.estimated_unit_price ?? null,
+        actual_unit_price: item.actual_unit_price ?? null,
+        notes: item.notes || null,
+        status: item.status || 'pending',
+        purchase_date: item.purchase_date || null,
+        transaction_id: isValidUuid(item.transaction_id) ? item.transaction_id : null,
+        category_id: isValidUuid((item as any).category_id) ? (item as any).category_id : null,
+        category_name: item.category_name || 'Shopping',
+        sort_order: (item as any).sort_order ?? 0
       };
+      if (item.id && isValidUuid(item.id)) {
+        payload.id = item.id;
+      }
       const { data, error } = await supabase.from('shopping_items').insert([payload]).select().single();
       if (error) throw new Error(error.message);
       return {
@@ -761,7 +881,25 @@ export class ApiService {
     }
 
     if (!API_BASE) {
-      return item as ShoppingItem;
+      return {
+        id: item.id || 'item-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now(),
+        list_id: item.list_id,
+        user_id: 'guest',
+        name: item.name,
+        quantity: item.quantity ?? 1,
+        unit: item.unit || null,
+        estimated_unit_price: item.estimated_unit_price ?? null,
+        actual_unit_price: item.actual_unit_price ?? null,
+        notes: item.notes || null,
+        status: item.status || 'pending',
+        purchase_date: item.purchase_date || null,
+        transaction_id: item.transaction_id || null,
+        category_id: (item as any).category_id || null,
+        category_name: item.category_name || 'Shopping',
+        sort_order: (item as any).sort_order ?? 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
     }
 
     const res = await fetch(`${API_BASE}/api/shopping/lists/${item.list_id}/items`, {
@@ -788,7 +926,14 @@ export class ApiService {
       if (!user) {
         return { id, ...updates } as ShoppingItem;
       }
-      const { data, error } = await supabase.from('shopping_items').update(updates).eq('id', id).select().single();
+      const sanitizedUpdates = { ...updates };
+      if (sanitizedUpdates.transaction_id !== undefined && !isValidUuid(sanitizedUpdates.transaction_id)) {
+        sanitizedUpdates.transaction_id = null;
+      }
+      if (sanitizedUpdates.category_id !== undefined && !isValidUuid(sanitizedUpdates.category_id)) {
+        sanitizedUpdates.category_id = null;
+      }
+      const { data, error } = await supabase.from('shopping_items').update(sanitizedUpdates).eq('id', id).select().single();
       if (error) throw new Error(error.message);
       return {
         ...data,

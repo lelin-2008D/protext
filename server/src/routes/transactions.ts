@@ -8,7 +8,7 @@ const router = Router();
 const transactionSchema = z.object({
   type: z.enum(['income', 'expense'], { required_error: 'Type must be income or expense' }),
   amount: z.number({ required_error: 'Amount is required' }).positive('Amount must be greater than 0'),
-  description: z.string().min(1, 'Description is required').max(200, 'Description too long'),
+  description: z.string().trim().min(1, 'Description is required').max(200, 'Description too long'),
   category_id: z.string().nullable().optional(),
   category_name: z.string().default('Other'),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format').optional(),

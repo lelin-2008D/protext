@@ -100,7 +100,13 @@ export const ShoppingPage: React.FC<ShoppingPageProps> = ({ onNavigateToHistory 
   // Quick desktop add handler
   const handleQuickAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedListId || !quickName.trim() || quickSubmitting) return;
+    if (!selectedListId || quickSubmitting) return;
+
+    if (!quickName.trim()) {
+      const inputEl = document.getElementById('quick-item-input');
+      if (inputEl) inputEl.focus();
+      return;
+    }
 
     try {
       setQuickSubmitting(true);
@@ -183,13 +189,23 @@ export const ShoppingPage: React.FC<ShoppingPageProps> = ({ onNavigateToHistory 
         /* DETAIL VIEW HEADER */
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <button
-              onClick={() => setSelectedListId(null)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-sm"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Back to Lists</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setSelectedListId(null)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-sm"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back to Lists</span>
+              </button>
+              <button
+                onClick={() => setIsCreateListOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800/80 text-xs font-bold text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition shadow-sm"
+                title="Create a new shopping list"
+              >
+                <Plus className="w-4 h-4" />
+                <span>New List</span>
+              </button>
+            </div>
 
             {/* List Actions Menu */}
             <div className="flex items-center gap-1.5">
@@ -330,6 +346,7 @@ export const ShoppingPage: React.FC<ShoppingPageProps> = ({ onNavigateToHistory 
           <div className="hidden md:block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
             <form onSubmit={handleQuickAdd} className="flex items-center gap-3">
               <input
+                id="quick-item-input"
                 type="text"
                 value={quickName}
                 onChange={e => setQuickName(e.target.value)}
@@ -365,10 +382,10 @@ export const ShoppingPage: React.FC<ShoppingPageProps> = ({ onNavigateToHistory 
               />
               <button
                 type="submit"
-                disabled={!quickName.trim() || quickSubmitting}
+                disabled={quickSubmitting}
                 className="px-4 py-2 rounded-xl text-xs font-semibold text-white finance-gradient-action hover:opacity-95 disabled:opacity-50 transition shadow-sm"
               >
-                Add
+                {quickSubmitting ? 'Adding...' : 'Add'}
               </button>
             </form>
           </div>
@@ -756,7 +773,9 @@ export const ShoppingPage: React.FC<ShoppingPageProps> = ({ onNavigateToHistory 
         onClose={() => setIsCreateListOpen(false)}
         onSubmit={async (title, desc) => {
           const created = await createList(title, desc);
-          setSelectedListId(created.id);
+          if (created && created.id) {
+            setSelectedListId(created.id);
+          }
         }}
       />
 

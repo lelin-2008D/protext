@@ -136,7 +136,7 @@ export const CreateListModal: React.FC<CreateListModalProps> = ({ isOpen, onClos
             </button>
             <button
               type="submit"
-              disabled={submitting || !title.trim()}
+              disabled={submitting}
               className="px-5 py-2.5 rounded-xl text-xs font-semibold text-white finance-gradient-action hover:opacity-95 disabled:opacity-50 transition shadow-md shadow-blue-500/20"
             >
               {submitting ? 'Creating...' : 'Create List'}
@@ -621,7 +621,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={submitting || !name.trim()}
+              disabled={submitting}
               className="px-5 py-2.5 rounded-xl text-xs font-semibold text-white finance-gradient-action hover:opacity-95 disabled:opacity-50 transition shadow-md shadow-blue-500/20"
             >
               {submitting ? 'Adding...' : 'Add Item'}

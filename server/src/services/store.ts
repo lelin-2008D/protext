@@ -42,7 +42,7 @@ export class StoreService {
     if (since) {
       list = list.filter(t => (t.updated_at || '') > since);
     }
-    return list;
+    return [...list].sort((a, b) => b.date.localeCompare(a.date) || (b.created_at || '').localeCompare(a.created_at || ''));
   }
 
   static async getTransactionById(userId: string, id: string): Promise<Transaction | null> {
@@ -69,23 +69,29 @@ export class StoreService {
 
   static async createTransaction(
     userId: string,
-    data: Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+    data: Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { id?: string }
   ): Promise<Transaction> {
     const supabase = getSupabaseAdmin();
     if (supabase) {
+      const payload: any = {
+        user_id: userId,
+        type: data.type,
+        amount: data.amount,
+        description: data.description,
+        category_id: data.category_id || null,
+        category_name: data.category_name || 'Other',
+        date: data.date || new Date().toISOString().split('T')[0],
+        confidence: data.confidence ?? 1.0,
+        raw_input: data.raw_input || null
+      };
+      // Only include id if it's a valid UUID
+      if (data.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(data.id)) {
+        payload.id = data.id;
+      }
+
       const { data: created, error } = await supabase
         .from('transactions')
-        .insert({
-          user_id: userId,
-          type: data.type,
-          amount: data.amount,
-          description: data.description,
-          category_id: data.category_id || null,
-          category_name: data.category_name || 'Other',
-          date: data.date || new Date().toISOString().split('T')[0],
-          confidence: data.confidence ?? 1.0,
-          raw_input: data.raw_input || null
-        })
+        .insert(payload)
         .select()
         .single();
 
@@ -97,23 +103,36 @@ export class StoreService {
       };
     }
 
-    // Memory fallback
+    // Memory fallback with idempotency/deduplication guard
+    const current = memoryTransactions.get(userId) || [];
+    const txDate = data.date || new Date().toISOString().split('T')[0];
+    const recentDuplicate = current.find(t => 
+      t.type === data.type &&
+      Math.abs(t.amount - data.amount) < 0.001 &&
+      t.description.trim().toLowerCase() === data.description.trim().toLowerCase() &&
+      t.date === txDate &&
+      Date.now() - new Date(t.created_at || '').getTime() < 3000
+    );
+
+    if (recentDuplicate) {
+      return recentDuplicate;
+    }
+
     const newTx: Transaction = {
-      id: 'tx-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now(),
+      id: data.id || ('tx-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now()),
       user_id: userId,
       type: data.type,
       amount: data.amount,
       description: data.description,
       category_id: data.category_id || null,
       category_name: data.category_name || 'Other',
-      date: data.date || new Date().toISOString().split('T')[0],
+      date: txDate,
       confidence: data.confidence ?? 1.0,
       raw_input: data.raw_input || null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
 
-    const current = memoryTransactions.get(userId) || [];
     memoryTransactions.set(userId, [newTx, ...current]);
     return newTx;
   }
@@ -278,6 +297,20 @@ export class StoreService {
       };
 
       try {
+        const { error: itemsError } = await supabase.from('shopping_items').delete().eq('user_id', userId);
+        if (itemsError && !isMissingTable(itemsError)) throw new Error(itemsError.message);
+      } catch (err: any) {
+        if (!isMissingTable(err)) throw err;
+      }
+
+      try {
+        const { error: listsError } = await supabase.from('shopping_lists').delete().eq('user_id', userId);
+        if (listsError && !isMissingTable(listsError)) throw new Error(listsError.message);
+      } catch (err: any) {
+        if (!isMissingTable(err)) throw err;
+      }
+
+      try {
         const { error: entriesError } = await supabase.from('friend_money_entries').delete().eq('user_id', userId);
         if (entriesError && !isMissingTable(entriesError)) throw new Error(entriesError.message);
       } catch (err: any) {
@@ -325,6 +358,8 @@ export class StoreService {
     memoryCategories.delete(userId);
     memoryFriends.delete(userId);
     memoryFriendEntries.delete(userId);
+    memoryShoppingLists.delete(userId);
+    memoryShoppingItems.delete(userId);
 
     if (resetSettings) {
       memorySettings.delete(userId);

@@ -15,8 +15,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 CREATE TABLE IF NOT EXISTS public.settings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID UNIQUE NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    starting_balance NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
-    currency TEXT NOT NULL DEFAULT 'NPR',
+    starting_balance NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (starting_balance >= 0),
+    currency TEXT NOT NULL DEFAULT 'NPR' CHECK (length(trim(currency)) >= 1),
     theme TEXT NOT NULL DEFAULT 'light',
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS public.settings (
 CREATE TABLE IF NOT EXISTS public.categories (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,
+    name TEXT NOT NULL CHECK (length(trim(name)) > 0),
     type TEXT NOT NULL CHECK (type IN ('income', 'expense')),
     keywords TEXT[] NOT NULL DEFAULT '{}',
     icon TEXT NOT NULL DEFAULT 'Tag',
@@ -42,11 +42,11 @@ CREATE TABLE IF NOT EXISTS public.transactions (
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     type TEXT NOT NULL CHECK (type IN ('income', 'expense')),
     amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
-    description TEXT NOT NULL,
+    description TEXT NOT NULL CHECK (length(trim(description)) > 0),
     category_id UUID REFERENCES public.categories(id) ON DELETE SET NULL,
     category_name TEXT NOT NULL DEFAULT 'Other',
     date DATE NOT NULL DEFAULT CURRENT_DATE,
-    confidence NUMERIC(3, 2) NOT NULL DEFAULT 1.00,
+    confidence NUMERIC(3, 2) NOT NULL DEFAULT 1.00 CHECK (confidence >= 0.00 AND confidence <= 1.00),
     raw_input TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -56,6 +56,8 @@ CREATE TABLE IF NOT EXISTS public.transactions (
 CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON public.transactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_date ON public.transactions(date DESC);
 CREATE INDEX IF NOT EXISTS idx_transactions_user_date ON public.transactions(user_id, date DESC);
+CREATE INDEX IF NOT EXISTS idx_transactions_user_cat ON public.transactions(user_id, category_name);
+CREATE INDEX IF NOT EXISTS idx_transactions_user_type_date ON public.transactions(user_id, type, date DESC);
 CREATE INDEX IF NOT EXISTS idx_categories_user_id ON public.categories(user_id);
 CREATE INDEX IF NOT EXISTS idx_settings_user_id ON public.settings(user_id);
 
@@ -178,7 +180,7 @@ ON CONFLICT DO NOTHING;
 CREATE TABLE IF NOT EXISTS public.friends (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,
+    name TEXT NOT NULL CHECK (length(trim(name)) > 0),
     note TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -202,6 +204,7 @@ CREATE INDEX IF NOT EXISTS idx_friends_user_id ON public.friends(user_id);
 CREATE INDEX IF NOT EXISTS idx_friend_money_entries_friend_id ON public.friend_money_entries(friend_id);
 CREATE INDEX IF NOT EXISTS idx_friend_money_entries_user_id ON public.friend_money_entries(user_id);
 CREATE INDEX IF NOT EXISTS idx_friend_money_entries_date ON public.friend_money_entries(date DESC);
+CREATE INDEX IF NOT EXISTS idx_friend_money_entries_friend_date ON public.friend_money_entries(friend_id, date DESC);
 
 -- ENABLE ROW LEVEL SECURITY (RLS) FOR FRIENDS
 ALTER TABLE public.friends ENABLE ROW LEVEL SECURITY;
@@ -231,7 +234,13 @@ CREATE POLICY "Users can view own friend money entries"
 
 CREATE POLICY "Users can insert own friend money entries"
     ON public.friend_money_entries FOR INSERT
-    WITH CHECK (auth.uid() = user_id);
+    WITH CHECK (
+        auth.uid() = user_id 
+        AND EXISTS (
+            SELECT 1 FROM public.friends f 
+            WHERE f.id = friend_id AND f.user_id = auth.uid()
+        )
+    );
 
 CREATE POLICY "Users can update own friend money entries"
     ON public.friend_money_entries FOR UPDATE
@@ -245,7 +254,7 @@ CREATE POLICY "Users can delete own friend money entries"
 CREATE TABLE IF NOT EXISTS public.shopping_lists (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    title TEXT NOT NULL,
+    title TEXT NOT NULL CHECK (length(trim(title)) > 0),
     description TEXT,
     status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed', 'archived')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -257,7 +266,7 @@ CREATE TABLE IF NOT EXISTS public.shopping_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     list_id UUID NOT NULL REFERENCES public.shopping_lists(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,
+    name TEXT NOT NULL CHECK (length(trim(name)) > 0),
     quantity NUMERIC(10, 2) NOT NULL DEFAULT 1 CHECK (quantity > 0),
     unit TEXT,
     estimated_unit_price NUMERIC(12, 2) CHECK (estimated_unit_price IS NULL OR estimated_unit_price >= 0),
@@ -278,6 +287,8 @@ CREATE INDEX IF NOT EXISTS idx_shopping_lists_user_id ON public.shopping_lists(u
 CREATE INDEX IF NOT EXISTS idx_shopping_items_list_id ON public.shopping_items(list_id);
 CREATE INDEX IF NOT EXISTS idx_shopping_items_user_id ON public.shopping_items(user_id);
 CREATE INDEX IF NOT EXISTS idx_shopping_items_transaction_id ON public.shopping_items(transaction_id);
+CREATE INDEX IF NOT EXISTS idx_shopping_items_list_order ON public.shopping_items(list_id, sort_order ASC, created_at ASC);
+CREATE INDEX IF NOT EXISTS idx_shopping_items_user_status ON public.shopping_items(user_id, status);
 
 -- ENABLE ROW LEVEL SECURITY (RLS) FOR SHOPPING
 ALTER TABLE public.shopping_lists ENABLE ROW LEVEL SECURITY;
@@ -307,7 +318,13 @@ CREATE POLICY "Users can view own shopping items"
 
 CREATE POLICY "Users can insert own shopping items"
     ON public.shopping_items FOR INSERT
-    WITH CHECK (auth.uid() = user_id);
+    WITH CHECK (
+        auth.uid() = user_id 
+        AND EXISTS (
+            SELECT 1 FROM public.shopping_lists sl 
+            WHERE sl.id = list_id AND sl.user_id = auth.uid()
+        )
+    );
 
 CREATE POLICY "Users can update own shopping items"
     ON public.shopping_items FOR UPDATE
@@ -316,4 +333,43 @@ CREATE POLICY "Users can update own shopping items"
 CREATE POLICY "Users can delete own shopping items"
     ON public.shopping_items FOR DELETE
     USING (auth.uid() = user_id);
+
+-- AUTOMATIC updated_at TRIGGER FUNCTION
+CREATE OR REPLACE FUNCTION public.set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Apply triggers across all tables
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_profiles_updated_at') THEN
+        CREATE TRIGGER trg_profiles_updated_at BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_settings_updated_at') THEN
+        CREATE TRIGGER trg_settings_updated_at BEFORE UPDATE ON public.settings FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_categories_updated_at') THEN
+        CREATE TRIGGER trg_categories_updated_at BEFORE UPDATE ON public.categories FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_transactions_updated_at') THEN
+        CREATE TRIGGER trg_transactions_updated_at BEFORE UPDATE ON public.transactions FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_friends_updated_at') THEN
+        CREATE TRIGGER trg_friends_updated_at BEFORE UPDATE ON public.friends FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_friend_money_entries_updated_at') THEN
+        CREATE TRIGGER trg_friend_money_entries_updated_at BEFORE UPDATE ON public.friend_money_entries FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_shopping_lists_updated_at') THEN
+        CREATE TRIGGER trg_shopping_lists_updated_at BEFORE UPDATE ON public.shopping_lists FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_shopping_items_updated_at') THEN
+        CREATE TRIGGER trg_shopping_items_updated_at BEFORE UPDATE ON public.shopping_items FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+    END IF;
+END $$;
+
 

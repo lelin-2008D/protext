@@ -345,34 +345,37 @@ export const ShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // ACTIONS: Lists
   const createList = useCallback(
     async (title: string, description?: string): Promise<ShoppingList> => {
-      if (!user) throw new Error('User not logged in');
+      const effectiveUserId = user?.id || (typeof localStorage !== 'undefined' ? JSON.parse(localStorage.getItem('hisab_guest_user') || '{}')?.id : null) || 'guest';
+      const isGuestMode = !user || effectiveUserId.startsWith('guest-') || effectiveUserId === 'guest';
 
       const tempId = 'list-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now();
       const newList: ShoppingList = {
         id: tempId,
-        user_id: user.id,
+        user_id: effectiveUserId,
         title: title.trim(),
         description: description?.trim() || null,
         status: 'active',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        _isOfflinePending: !isOnline
+        _isOfflinePending: !isOnline && !isGuestMode
       };
 
       setLists(prev => [newList, ...prev]);
       await saveLocalShoppingList(newList);
 
-      if (isOnline) {
+      if (isOnline && !isGuestMode) {
         try {
           const created = await ApiService.createShoppingList({
             title: newList.title,
             description: newList.description,
             status: newList.status
           });
-          setLists(prev => prev.map(l => (l.id === tempId ? created : l)));
-          await deleteLocalShoppingList(tempId);
-          await saveLocalShoppingList(created);
-          return created;
+          if (created && created.id) {
+            setLists(prev => prev.map(l => (l.id === tempId ? created : l)));
+            await deleteLocalShoppingList(tempId);
+            await saveLocalShoppingList(created);
+            return created;
+          }
         } catch (err) {
           console.warn('[ShoppingContext] Online list create failed, enqueuing:', err);
           await addToSyncQueue({
@@ -382,7 +385,7 @@ export const ShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             data: newList
           });
         }
-      } else {
+      } else if (!isOnline && !isGuestMode) {
         await addToSyncQueue({
           id: tempId,
           action: 'create',
@@ -398,7 +401,8 @@ export const ShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const updateList = useCallback(
     async (id: string, updates: Partial<ShoppingList>): Promise<ShoppingList | void> => {
-      if (!user) return;
+      const effectiveUserId = user?.id || (typeof localStorage !== 'undefined' ? JSON.parse(localStorage.getItem('hisab_guest_user') || '{}')?.id : null) || 'guest';
+      const isGuestMode = !user || effectiveUserId.startsWith('guest-') || effectiveUserId === 'guest';
 
       let updatedList: ShoppingList | null = null;
       setLists(prev =>
@@ -420,7 +424,7 @@ export const ShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
 
       const queuePayload = { id, ...updates };
-      if (isOnline) {
+      if (isOnline && !isGuestMode) {
         try {
           await ApiService.updateShoppingList(id, updates);
         } catch (err) {
@@ -432,7 +436,7 @@ export const ShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             data: queuePayload
           });
         }
-      } else {
+      } else if (!isOnline && !isGuestMode) {
         await addToSyncQueue({
           id: `edit-list-${id}-${Date.now()}`,
           action: 'update',
@@ -477,6 +481,9 @@ export const ShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       }
 
+      const effectiveUserId = user?.id || (typeof localStorage !== 'undefined' ? JSON.parse(localStorage.getItem('hisab_guest_user') || '{}')?.id : null) || 'guest';
+      const isGuestMode = !user || effectiveUserId.startsWith('guest-') || effectiveUserId === 'guest';
+
       // Remove items and list locally
       setLists(prev => prev.filter(l => l.id !== id));
       setItems(prev => prev.filter(i => i.list_id !== id));
@@ -484,7 +491,7 @@ export const ShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       await deleteLocalShoppingList(id);
       await deleteLocalShoppingItemsByList(id);
 
-      if (isOnline) {
+      if (isOnline && !isGuestMode) {
         try {
           await ApiService.deleteShoppingList(id);
         } catch (err) {
@@ -496,7 +503,7 @@ export const ShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             data: { id }
           });
         }
-      } else {
+      } else if (!isOnline && !isGuestMode) {
         await addToSyncQueue({
           id: `del-list-${id}-${Date.now()}`,
           action: 'delete',
@@ -521,7 +528,8 @@ export const ShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         category_name?: string;
       }
     ): Promise<ShoppingItem> => {
-      if (!user) throw new Error('User not logged in');
+      const effectiveUserId = user?.id || (typeof localStorage !== 'undefined' ? JSON.parse(localStorage.getItem('hisab_guest_user') || '{}')?.id : null) || 'guest';
+      const isGuestMode = !user || effectiveUserId.startsWith('guest-') || effectiveUserId === 'guest';
 
       const tempId = 'item-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now();
       const existingItems = items.filter(i => i.list_id === listId);
@@ -538,7 +546,7 @@ export const ShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const newItem: ShoppingItem = {
         id: tempId,
         list_id: listId,
-        user_id: user.id,
+        user_id: effectiveUserId,
         name: itemData.name.trim(),
         quantity: qty,
         unit: itemData.unit?.trim() || null,
@@ -552,19 +560,21 @@ export const ShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         sort_order: nextSortOrder,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        _isOfflinePending: !isOnline
+        _isOfflinePending: !isOnline && !isGuestMode
       };
 
       setItems(prev => [...prev, newItem]);
       await saveLocalShoppingItem(newItem);
 
-      if (isOnline) {
+      if (isOnline && !isGuestMode) {
         try {
           const created = await ApiService.createShoppingItem(newItem);
-          setItems(prev => prev.map(i => (i.id === tempId ? created : i)));
-          await deleteLocalShoppingItem(tempId);
-          await saveLocalShoppingItem(created);
-          return created;
+          if (created && created.id) {
+            setItems(prev => prev.map(i => (i.id === tempId ? created : i)));
+            await deleteLocalShoppingItem(tempId);
+            await saveLocalShoppingItem(created);
+            return created;
+          }
         } catch (err) {
           console.warn('[ShoppingContext] Online item create failed, enqueuing:', err);
           await addToSyncQueue({
@@ -574,7 +584,7 @@ export const ShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             data: newItem
           });
         }
-      } else {
+      } else if (!isOnline && !isGuestMode) {
         await addToSyncQueue({
           id: tempId,
           action: 'create',
@@ -590,7 +600,8 @@ export const ShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const editItem = useCallback(
     async (id: string, updates: Partial<ShoppingItem>): Promise<void> => {
-      if (!user) return;
+      const effectiveUserId = user?.id || (typeof localStorage !== 'undefined' ? JSON.parse(localStorage.getItem('hisab_guest_user') || '{}')?.id : null) || 'guest';
+      const isGuestMode = !user || effectiveUserId.startsWith('guest-') || effectiveUserId === 'guest';
 
       const currentItem = items.find(i => i.id === id);
       if (!currentItem) return;
@@ -637,7 +648,7 @@ export const ShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       await saveLocalShoppingItem(updatedItem);
 
       const queuePayload = { id, ...updates };
-      if (isOnline) {
+      if (isOnline && !isGuestMode) {
         try {
           await ApiService.updateShoppingItem(id, updates);
         } catch (err) {
@@ -649,7 +660,7 @@ export const ShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             data: queuePayload
           });
         }
-      } else {
+      } else if (!isOnline && !isGuestMode) {
         await addToSyncQueue({
           id: `edit-item-${id}-${Date.now()}`,
           action: 'update',
@@ -680,7 +691,8 @@ export const ShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const deleteItem = useCallback(
     async (id: string, deleteLinkedTransaction = true): Promise<void> => {
-      if (!user) return;
+      const effectiveUserId = user?.id || (typeof localStorage !== 'undefined' ? JSON.parse(localStorage.getItem('hisab_guest_user') || '{}')?.id : null) || 'guest';
+      const isGuestMode = !user || effectiveUserId.startsWith('guest-') || effectiveUserId === 'guest';
 
       const target = items.find(i => i.id === id);
       if (!target) return;
@@ -696,7 +708,7 @@ export const ShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setItems(prev => prev.filter(i => i.id !== id));
       await deleteLocalShoppingItem(id);
 
-      if (isOnline) {
+      if (isOnline && !isGuestMode) {
         try {
           await ApiService.deleteShoppingItem(id);
         } catch (err) {
@@ -708,7 +720,7 @@ export const ShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             data: { id }
           });
         }
-      } else {
+      } else if (!isOnline && !isGuestMode) {
         await addToSyncQueue({
           id: `del-item-${id}-${Date.now()}`,
           action: 'delete',
@@ -730,7 +742,8 @@ export const ShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // "Repeated clicks, retries, network reconnects, and synchronization must never create duplicate transactions"
   const purchaseItem = useCallback(
     async (params: PurchaseItemParams): Promise<{ item: ShoppingItem; transaction: Transaction }> => {
-      if (!user) throw new Error('User not logged in');
+      const effectiveUserId = user?.id || (typeof localStorage !== 'undefined' ? JSON.parse(localStorage.getItem('hisab_guest_user') || '{}')?.id : null) || 'guest';
+      const isGuestMode = !user || effectiveUserId.startsWith('guest-') || effectiveUserId === 'guest';
 
       const target = items.find(i => i.id === params.itemId);
       if (!target) throw new Error('Shopping item not found');
@@ -818,7 +831,7 @@ export const ShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         transaction_id: generatedTx.id
       };
 
-      if (isOnline) {
+      if (isOnline && !isGuestMode) {
         try {
           await ApiService.updateShoppingItem(target.id, syncUpdates);
         } catch (err) {
@@ -830,7 +843,7 @@ export const ShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             data: { id: target.id, ...syncUpdates }
           });
         }
-      } else {
+      } else if (!isOnline && !isGuestMode) {
         await addToSyncQueue({
           id: `purchase-${target.id}-${Date.now()}`,
           action: 'update',
@@ -847,7 +860,8 @@ export const ShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Undo purchase: Revert item to pending, delete linked transaction once
   const undoPurchase = useCallback(
     async (itemId: string): Promise<void> => {
-      if (!user) throw new Error('User not logged in');
+      const effectiveUserId = user?.id || (typeof localStorage !== 'undefined' ? JSON.parse(localStorage.getItem('hisab_guest_user') || '{}')?.id : null) || 'guest';
+      const isGuestMode = !user || effectiveUserId.startsWith('guest-') || effectiveUserId === 'guest';
 
       const target = items.find(i => i.id === itemId);
       if (!target) throw new Error('Shopping item not found');
@@ -876,7 +890,7 @@ export const ShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         transaction_id: null
       };
 
-      if (isOnline) {
+      if (isOnline && !isGuestMode) {
         try {
           await ApiService.updateShoppingItem(itemId, syncUpdates);
         } catch (err) {
@@ -888,7 +902,7 @@ export const ShoppingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             data: { id: itemId, ...syncUpdates }
           });
         }
-      } else {
+      } else if (!isOnline && !isGuestMode) {
         await addToSyncQueue({
           id: `undo-${itemId}-${Date.now()}`,
           action: 'update',

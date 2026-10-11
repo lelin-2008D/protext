@@ -6,13 +6,13 @@ import { StoreService } from '../services/store.js';
 const router = Router();
 
 const shoppingListSchema = z.object({
-  title: z.string().min(1, 'List title is required').max(100, 'List title too long'),
+  title: z.string().trim().min(1, 'List title is required').max(100, 'List title too long'),
   description: z.string().max(500, 'Description too long').nullable().optional(),
   status: z.enum(['active', 'completed', 'archived']).optional()
 });
 
 const shoppingItemSchema = z.object({
-  name: z.string().min(1, 'Item name is required').max(100, 'Item name too long'),
+  name: z.string().trim().min(1, 'Item name is required').max(100, 'Item name too long'),
   quantity: z.number().positive('Quantity must be greater than 0').default(1),
   unit: z.string().max(20).nullable().optional(),
   estimated_unit_price: z.number().nonnegative('Estimated price cannot be negative').nullable().optional(),

@@ -6,7 +6,7 @@ import { StoreService } from '../services/store.js';
 const router = Router();
 
 const friendSchema = z.object({
-  name: z.string().min(1, 'Friend name is required').max(100, 'Friend name too long'),
+  name: z.string().trim().min(1, 'Friend name is required').max(100, 'Friend name too long'),
   note: z.string().nullable().optional()
 });
 

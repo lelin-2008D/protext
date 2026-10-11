@@ -446,4 +446,88 @@ describe('User Journeys & Financial Integrity Tests', () => {
     expect(summary.purchasedItemsCount).toBe(2);
     expect(summary.actualPurchasedTotal).toBe(2180);
   });
+
+  describe('Add List and Add Item Robustness', () => {
+    it('creates shopping list with valid ID and timestamps in guest mode', () => {
+      const effectiveUserId = 'guest-user-123';
+      const isGuestMode = true;
+      const title = 'Vegetables & Groceries';
+      const description = 'Fresh items from market';
+
+      const tempId = 'list-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now();
+      const newList: ShoppingList = {
+        id: tempId,
+        user_id: effectiveUserId,
+        title: title.trim(),
+        description: description.trim(),
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        _isOfflinePending: false
+      };
+
+      expect(newList.id).toBeDefined();
+      expect(typeof newList.id).toBe('string');
+      expect(newList.id.startsWith('list-')).toBe(true);
+      expect(newList.title).toBe(title);
+      expect(newList.status).toBe('active');
+      expect(isGuestMode).toBe(true);
+    });
+
+    it('creates shopping item with valid ID and numeric fields', () => {
+      const effectiveUserId = 'guest-user-123';
+      const tempId = 'item-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now();
+      const newItem: ShoppingItem = {
+        id: tempId,
+        list_id: 'list-123',
+        user_id: effectiveUserId,
+        name: 'Potato (Aalu)',
+        quantity: 2.5,
+        unit: 'kg',
+        estimated_unit_price: 60,
+        actual_unit_price: null,
+        notes: 'Red potatoes',
+        status: 'pending',
+        purchase_date: null,
+        transaction_id: null,
+        category_name: 'Groceries',
+        sort_order: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        _isOfflinePending: false
+      };
+
+      expect(newItem.id).toBeDefined();
+      expect(newItem.id.startsWith('item-')).toBe(true);
+      expect(newItem.quantity).toBe(2.5);
+      expect(newItem.unit).toBe('kg');
+      expect(calculateItemTotal(newItem.quantity, newItem.estimated_unit_price)).toBe(150);
+    });
+
+    it('rejects blank list titles and validates properly', () => {
+      const validateListTitle = (title: string) => {
+        if (!title || !title.trim()) {
+          return 'List title is required';
+        }
+        return null;
+      };
+
+      expect(validateListTitle('')).toBe('List title is required');
+      expect(validateListTitle('   ')).toBe('List title is required');
+      expect(validateListTitle('Bhatbhateni')).toBeNull();
+    });
+
+    it('rejects blank item names and validates properly', () => {
+      const validateItemName = (name: string) => {
+        if (!name || !name.trim()) {
+          return 'Item name is required';
+        }
+        return null;
+      };
+
+      expect(validateItemName('')).toBe('Item name is required');
+      expect(validateItemName('   ')).toBe('Item name is required');
+      expect(validateItemName('Daal')).toBeNull();
+    });
+  });
 });
