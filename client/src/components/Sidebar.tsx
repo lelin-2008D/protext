@@ -59,7 +59,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const userSubtitle = isGuest ? 'Guest Account' : (user?.email || 'Student');
 
   return (
-    <aside className="w-full lg:w-64 xl:w-72 bg-slate-100/90 dark:bg-[#050816]/95 border-r border-slate-200 dark:border-slate-800/80 flex flex-col justify-between shrink-0 h-screen sticky top-0 p-5 text-slate-700 dark:text-slate-300 select-none overflow-y-auto backdrop-blur-xl">
+    <aside className="w-full lg:w-64 xl:w-72 bg-slate-50/95 dark:bg-[#071A2B]/95 border-r border-slate-200 dark:border-slate-800/80 flex flex-col justify-between shrink-0 h-[100dvh] sticky top-0 p-4 xl:p-5 text-slate-700 dark:text-slate-300 select-none overflow-y-auto backdrop-blur-xl">
       {/* Brand Header */}
       <div>
         <div className="flex items-center justify-between mb-8 px-2">
@@ -176,7 +176,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Bottom Area */}
       <div className="mt-6 space-y-4">
         {/* Designed for Nepal Promo Card */}
-        <div className="relative overflow-hidden rounded-2xl finance-gradient border border-slate-300 dark:border-slate-800 p-4 shadow-md shadow-slate-300/30 dark:shadow-none">
+        <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-[#0B2438] border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-2 text-blue-600 dark:text-blue-400">
             <Mountain className="w-5 h-5" />
           </div>
@@ -185,9 +185,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* User Profile Card */}
-        <div
+        <button
+          type="button"
           onClick={onOpenAuthModal}
-          className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 cursor-pointer transition-colors dark:bg-slate-900/80 dark:hover:bg-slate-800/80 dark:border-slate-800/80"
+          className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 cursor-pointer transition-colors dark:bg-slate-900/80 dark:hover:bg-slate-800/80 dark:border-slate-800/80 text-left focus-visible:outline-offset-2"
         >
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-full finance-gradient-action flex items-center justify-center font-bold text-xs uppercase shadow-sm">
@@ -199,7 +200,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           </div>
           <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
-        </div>
+        </button>
       </div>
     </aside>
   );

@@ -40,7 +40,7 @@ const MainLayout: React.FC = () => {
   const { categories, editTransaction, deleteTransaction, addCustomCategory } = useTransactions();
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#050816] text-slate-900 dark:text-slate-100 flex selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen bg-[var(--app-bg)] text-slate-900 dark:text-slate-100 flex selection:bg-sky-600 selection:text-white">
       {/* Animated HISAB Preloader */}
       <Preloader />
 
@@ -105,7 +105,7 @@ const MainLayout: React.FC = () => {
         />
 
         {/* Dynamic Page Views */}
-        <main className="flex-1 max-w-[1500px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 lg:pb-12">
+        <main className="flex-1 max-w-[1560px] w-full mx-auto px-3.5 sm:px-6 xl:px-8 py-5 sm:py-7 pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-10">
           {activeTab === 'dashboard' && (
             <DashboardPage
               onNavigateToHistory={() => setActiveTab('history')}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Wallet, ArrowUpRight, ArrowDownLeft, PiggyBank } from 'lucide-react';
+import { Wallet, ArrowUpRight, ArrowDownLeft, PiggyBank, ArrowUpRight as OpenBalance } from 'lucide-react';
 import { useTransactions } from '../context/TransactionContext.js';
 
 interface DashboardHeroCardsProps {
@@ -21,34 +21,30 @@ export const DashboardHeroCards: React.FC<DashboardHeroCardsProps> = ({ onOpenSt
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {/* 1. Total Balance Card */}
-      <div
+      <button
         onClick={onOpenStartingBalance}
-        className="relative overflow-hidden rounded-2xl finance-surface finance-surface-hover border p-5 cursor-pointer"
+        type="button"
+        aria-label="View balance and edit starting balance"
+        className="relative w-full overflow-hidden rounded-2xl finance-balance-card border border-sky-900/10 p-5 text-left transition-transform hover:-translate-y-0.5 focus-visible:outline-offset-4"
       >
         <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Total Balance</span>
-          <div className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/20 text-emerald-500 dark:text-emerald-400 flex items-center justify-center">
+          <span className="text-xs font-semibold text-[var(--balance-muted)]">Available balance</span>
+          <div className="w-8 h-8 rounded-xl bg-black/5 border border-[var(--balance-rule)] text-[var(--on-balance)] flex items-center justify-center">
             <Wallet className="w-4 h-4" />
           </div>
         </div>
 
         <div className="mb-2">
-          <h3 className="text-2xl sm:text-[26px] font-black text-slate-900 dark:text-white tracking-tight">
+          <h3 className="text-2xl sm:text-[26px] font-black text-[var(--on-balance)] tracking-tight">
             {formatCurrency(availableBalance)}
           </h3>
         </div>
 
-        <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/60">
-          <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-500 dark:text-emerald-400">
-            <span>↑ 12.4%</span>
-            <span className="text-slate-400 font-normal">vs last week</span>
-          </div>
-          {/* Sparkline SVG */}
-          <svg className="w-16 h-5 stroke-emerald-500 fill-none" viewBox="0 0 60 20">
-            <path d="M 0 16 Q 15 14, 25 18 T 45 6 T 60 4" strokeWidth="2.5" strokeLinecap="round" />
-          </svg>
+        <div className="flex items-center justify-between pt-2 border-t border-[var(--balance-rule)]">
+          <span className="text-[11px] text-[var(--balance-muted)]">Current balance across your recorded activity</span>
+          <OpenBalance aria-hidden="true" className="w-4 h-4 shrink-0 text-[var(--on-balance)]" />
         </div>
-      </div>
+      </button>
 
       {/* 2. Total Income Card */}
       <div className="relative overflow-hidden rounded-2xl finance-surface finance-surface-hover border p-5">
@@ -65,15 +61,8 @@ export const DashboardHeroCards: React.FC<DashboardHeroCardsProps> = ({ onOpenSt
           </h3>
         </div>
 
-        <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/60">
-          <div className="flex items-center gap-1 text-[11px] font-semibold text-teal-500 dark:text-teal-400">
-            <span>↑ 8.2%</span>
-            <span className="text-slate-400 font-normal">vs last week</span>
-          </div>
-          {/* Sparkline SVG */}
-          <svg className="w-16 h-5 stroke-teal-500 fill-none" viewBox="0 0 60 20">
-            <path d="M 0 18 Q 15 15, 30 10 T 45 8 T 60 3" strokeWidth="2.5" strokeLinecap="round" />
-          </svg>
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-800/60">
+          <span className="text-[11px] text-slate-500 dark:text-slate-400">All recorded income</span>
         </div>
       </div>
 
@@ -92,15 +81,8 @@ export const DashboardHeroCards: React.FC<DashboardHeroCardsProps> = ({ onOpenSt
           </h3>
         </div>
 
-        <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/60">
-          <div className="flex items-center gap-1 text-[11px] font-semibold text-rose-500 dark:text-rose-400">
-            <span>↓ 4.1%</span>
-            <span className="text-slate-400 font-normal">vs last week</span>
-          </div>
-          {/* Sparkline SVG */}
-          <svg className="w-16 h-5 stroke-rose-500 fill-none" viewBox="0 0 60 20">
-            <path d="M 0 6 Q 20 8, 35 15 T 50 12 T 60 17" strokeWidth="2.5" strokeLinecap="round" />
-          </svg>
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-800/60">
+          <span className="text-[11px] text-slate-500 dark:text-slate-400">All recorded expenses</span>
         </div>
       </div>
 
@@ -119,15 +101,8 @@ export const DashboardHeroCards: React.FC<DashboardHeroCardsProps> = ({ onOpenSt
           </h3>
         </div>
 
-        <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/60">
-          <div className="flex items-center gap-1 text-[11px] font-semibold text-blue-500 dark:text-blue-400">
-            <span>↑ 15.8%</span>
-            <span className="text-slate-400 font-normal">vs last week</span>
-          </div>
-          {/* Sparkline SVG */}
-          <svg className="w-16 h-5 stroke-blue-500 fill-none" viewBox="0 0 60 20">
-            <path d="M 0 17 Q 15 15, 30 12 T 45 8 T 60 4" strokeWidth="2.5" strokeLinecap="round" />
-          </svg>
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-800/60">
+          <span className="text-[11px] text-slate-500 dark:text-slate-400">Income minus expenses</span>
         </div>
       </div>
     </div>

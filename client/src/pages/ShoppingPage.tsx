@@ -342,16 +342,16 @@ export const ShoppingPage: React.FC<ShoppingPageProps> = ({ onNavigateToHistory 
             )}
           </div>
 
-          {/* Quick Add Bar on Desktop */}
-          <div className="hidden md:block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
-            <form onSubmit={handleQuickAdd} className="flex items-center gap-3">
+          {/* Quick Add Bar */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 sm:p-4 shadow-sm">
+            <form onSubmit={handleQuickAdd} className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-3">
               <input
                 id="quick-item-input"
                 type="text"
                 value={quickName}
                 onChange={e => setQuickName(e.target.value)}
                 placeholder="Quick add item (e.g. Masuro Daal, Sunflower Oil)"
-                className="flex-1 px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="col-span-2 sm:flex-1 px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <input
                 type="number"
@@ -360,12 +360,12 @@ export const ShoppingPage: React.FC<ShoppingPageProps> = ({ onNavigateToHistory 
                 value={quickQuantity}
                 onChange={e => setQuickQuantity(e.target.value)}
                 placeholder="Qty"
-                className="w-20 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full sm:w-20 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <select
                 value={quickUnit}
                 onChange={e => setQuickUnit(e.target.value)}
-                className="w-24 px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full sm:w-24 px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {NEPAL_SHOPPING_UNITS.map(u => (
                   <option key={u} value={u}>{u}</option>
@@ -378,12 +378,12 @@ export const ShoppingPage: React.FC<ShoppingPageProps> = ({ onNavigateToHistory 
                 value={quickEstPrice}
                 onChange={e => setQuickEstPrice(e.target.value)}
                 placeholder="Est. Rs."
-                className="w-24 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full sm:w-24 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
                 type="submit"
                 disabled={quickSubmitting}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-white finance-gradient-action hover:opacity-95 disabled:opacity-50 transition shadow-sm"
+                className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-semibold text-white finance-gradient-action hover:opacity-95 disabled:opacity-50 transition shadow-sm"
               >
                 {quickSubmitting ? 'Adding...' : 'Add'}
               </button>

@@ -411,8 +411,6 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   const resolvedUnit = unit === 'custom' ? customUnit.trim() : unit;
 
   const calculatedEstTotal = useMemo(() => {
@@ -423,6 +421,8 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
     }
     return null;
   }, [quantity, estimatedPrice]);
+
+  if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -24,13 +24,13 @@ export const StatCards: React.FC<StatCardsProps> = ({ onEditStartingBalance }) =
         <div className="relative z-10 flex flex-col justify-between h-full">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-blue-100">Available Balance</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-[var(--balance-muted)]">Available Balance</span>
               <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             </div>
             {/* Quick edit starting balance button */}
             <button
               onClick={onEditStartingBalance}
-              className="inline-flex items-center gap-1 text-[11px] font-medium bg-white/60 hover:bg-white/75 dark:bg-white/15 dark:hover:bg-white/25 active:scale-95 px-2.5 py-1 rounded-full text-slate-800 dark:text-blue-100 transition backdrop-blur-sm"
+              className="inline-flex items-center gap-1 text-[11px] font-medium bg-black/5 hover:bg-black/10 dark:bg-white/15 dark:hover:bg-white/25 active:scale-95 px-2.5 py-1 rounded-full text-[var(--on-balance)] transition backdrop-blur-sm"
               title="Edit Starting Balance"
             >
               <Edit3 className="w-3 h-3" />
@@ -39,29 +39,29 @@ export const StatCards: React.FC<StatCardsProps> = ({ onEditStartingBalance }) =
           </div>
 
           <div className="my-1">
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-950 dark:text-white">
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[var(--on-balance)]">
               {formatCurrency(availableBalance)}
             </h1>
           </div>
 
           <div className="mt-4 pt-3 border-t border-slate-900/10 dark:border-white/15 grid grid-cols-2 gap-4">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-800 dark:text-emerald-300">
                 <TrendingUp className="w-4 h-4" />
               </div>
               <div>
-                <p className="text-[11px] text-slate-700 dark:text-blue-100 font-medium">Total Income</p>
-                <p className="text-sm sm:text-base font-bold text-emerald-700 dark:text-emerald-300">+{formatCurrency(totalIncome)}</p>
+                <p className="text-[11px] text-[var(--balance-muted)] font-medium">Total Income</p>
+                <p className="text-sm sm:text-base font-bold text-emerald-800 dark:text-emerald-200">+{formatCurrency(totalIncome)}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-rose-500/20 border border-rose-400/30 flex items-center justify-center text-rose-300">
+              <div className="w-8 h-8 rounded-lg bg-rose-500/20 border border-rose-400/30 flex items-center justify-center text-rose-800 dark:text-rose-300">
                 <TrendingDown className="w-4 h-4" />
               </div>
               <div>
-                <p className="text-[11px] text-slate-700 dark:text-blue-100 font-medium">Total Expenses</p>
-                <p className="text-sm sm:text-base font-bold text-rose-700 dark:text-rose-300">-{formatCurrency(totalExpenses)}</p>
+                <p className="text-[11px] text-[var(--balance-muted)] font-medium">Total Expenses</p>
+                <p className="text-sm sm:text-base font-bold text-rose-800 dark:text-rose-200">-{formatCurrency(totalExpenses)}</p>
               </div>
             </div>
           </div>
