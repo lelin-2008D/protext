@@ -7,25 +7,25 @@ export const BottomHighlights: React.FC = () => {
       title: 'Offline First',
       desc: 'Works without internet',
       icon: WifiOff,
-      color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20'
+      color: 'bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300 border-emerald-500/20'
     },
     {
       title: 'Secure & Private',
       desc: 'Your data, your control',
       icon: ShieldCheck,
-      color: 'bg-teal-500/15 text-teal-400 border-teal-500/20'
+      color: 'bg-slate-500/10 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300 border-slate-500/20'
     },
     {
       title: 'Sync Across Devices',
       desc: 'Browser + Mobile (PWA)',
       icon: RefreshCw,
-      color: 'bg-blue-500/15 text-blue-400 border-blue-500/20'
+      color: 'bg-blue-500/10 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300 border-blue-500/20'
     },
     {
       title: 'Fast & Lightweight',
       desc: 'Built for performance',
       icon: Zap,
-      color: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/20'
+      color: 'bg-amber-500/10 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300 border-amber-500/20'
     }
   ];
 

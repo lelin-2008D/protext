@@ -24,7 +24,7 @@ export const DEFAULT_CLIENT_CATEGORIES: Category[] = [
       'yatri', 'train', 'flight', 'ticket', 'van', 'cab', 'transport', 'ride'
     ],
     icon: 'Bus',
-    color: '#3B82F6'
+    color: '#0284C7'
   },
   {
     name: 'Education',

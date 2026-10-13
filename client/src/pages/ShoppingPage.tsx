@@ -603,7 +603,7 @@ export const ShoppingPage: React.FC<ShoppingPageProps> = ({ onNavigateToHistory 
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold shadow-md shadow-blue-500/20">
+              <div className="w-12 h-12 rounded-2xl bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300 flex items-center justify-center font-bold">
                 <ShoppingBag className="w-6 h-6" />
               </div>
               <div>

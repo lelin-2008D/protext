@@ -55,10 +55,10 @@ export const CategoryPieChart: React.FC = () => {
             <Tooltip
               formatter={(value: any) => [`Rs. ${Number(value || 0).toLocaleString('en-IN')}`, 'Spent']}
               contentStyle={{
-                backgroundColor: '#1E293B',
+                backgroundColor: 'var(--tooltip-bg)',
                 borderRadius: '8px',
-                border: 'none',
-                color: '#fff',
+                border: '1px solid var(--tooltip-border)',
+                color: 'var(--tooltip-text)',
                 fontSize: '12px'
               }}
             />

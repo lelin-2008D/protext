@@ -41,7 +41,7 @@ export const DashboardRecentTransactions: React.FC<DashboardRecentTransactionsPr
       return { icon: Banknote, bg: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20', pillBg: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' };
     }
     if (c.includes('internet') || c.includes('wifi') || c.includes('bill') || c.includes('utility') || c.includes('electricity')) {
-      return { icon: Wifi, bg: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/20', pillBg: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30' };
+      return { icon: Wifi, bg: 'bg-sky-500/10 text-sky-800 border-sky-500/20 dark:bg-sky-500/15 dark:text-sky-300', pillBg: 'bg-sky-500/10 text-sky-800 border-sky-500/20 dark:bg-sky-500/15 dark:text-sky-300' };
     }
     if (c.includes('freelance') || c.includes('project') || c.includes('work')) {
       return { icon: Briefcase, bg: 'bg-teal-500/15 text-teal-400 border-teal-500/20', pillBg: 'bg-teal-500/15 text-teal-300 border-teal-500/30' };

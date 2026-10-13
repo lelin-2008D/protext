@@ -9,9 +9,9 @@ interface AddCustomCategoryModalProps {
 }
 
 const COLOR_PALETTES = [
-  '#F97316', '#3B82F6', '#8B5CF6', '#EC4899', '#10B981',
-  '#6366F1', '#A855F7', '#EF4444', '#06B6D4', '#F59E0B',
-  '#14B8A6', '#84CC16', '#64748B'
+  '#0284C7', '#15803D', '#B45309', '#BE123C', '#0F766E',
+  '#4F46E5', '#0891B2', '#65A30D', '#7C3AED', '#C2410C',
+  '#0369A1', '#DB2777', '#64748B'
 ];
 
 export const AddCustomCategoryModal: React.FC<AddCustomCategoryModalProps> = ({

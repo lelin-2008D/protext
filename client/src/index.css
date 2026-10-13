@@ -13,23 +13,33 @@
     --hisab-gold-light: #E8DCC5;
     --hisab-gradient: linear-gradient(135deg, #F0F9FF 0%, #BAE6FD 50%, #0284C7 100%);
     --hisab-gradient-soft: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 65%, #BAE6FD 100%);
-    --app-bg: #F0F9FF;
+    --app-bg: #F5F9FC;
     --card-bg: #FFFFFF;
-    --surface-muted: #EAF6FC;
-    --surface-input: #F8FCFF;
-    --border-color: #D6E7F1;
+    --surface-muted: #EFF5F8;
+    --surface-input: #FBFDFF;
+    --border-color: #DCE6EC;
     --text-main: #0F172A;
     --text-muted: #475569;
     --accent: #0284C7;
     --accent-strong: #0369A1;
     --accent-soft: #E0F2FE;
+    --accent-text: #075985;
+    --action-bg: #0369A1;
+    --action-hover: #075985;
+    --on-action: #FFFFFF;
+    --income-color: #15803D;
+    --expense-color: #BE123C;
+    --chart-grid: #DCE6EC;
+    --chart-label: #64748B;
+    --tooltip-bg: #FFFFFF;
+    --tooltip-border: #DCE6EC;
+    --tooltip-text: #0F172A;
     --on-gradient: #020617;
-    --action-overlay: linear-gradient(135deg, transparent 0%, transparent 100%);
     --on-balance: #020617;
     --balance-muted: #0F172A;
     --balance-rule: rgba(15, 23, 42, 0.16);
     --balance-overlay: linear-gradient(135deg, transparent 0%, transparent 100%);
-    --shadow-color: rgba(7, 26, 43, 0.13);
+    --shadow-color: rgba(15, 37, 53, 0.1);
     --finance-gradient: var(--hisab-gradient);
   }
 
@@ -44,17 +54,27 @@
     --hisab-gradient: linear-gradient(135deg, #071A2B 0%, #075985 50%, #0EA5E9 100%);
     --hisab-gradient-soft: linear-gradient(135deg, #071A2B 0%, #0B2C43 65%, #075985 100%);
     --app-bg: #071A2B;
-    --card-bg: #0B2438;
-    --surface-muted: #102D43;
-    --surface-input: #0A2236;
-    --border-color: rgba(148, 190, 211, 0.18);
+    --card-bg: #0B2234;
+    --surface-muted: #102A3D;
+    --surface-input: #0A2031;
+    --border-color: rgba(148, 190, 211, 0.16);
     --text-main: #F8FAFC;
     --text-muted: #B8CBD8;
     --accent: #0EA5E9;
     --accent-strong: #38BDF8;
     --accent-soft: #103A55;
+    --accent-text: #7DD3FC;
+    --action-bg: #0EA5E9;
+    --action-hover: #38BDF8;
+    --on-action: #071A2B;
+    --income-color: #34D399;
+    --expense-color: #FB7185;
+    --chart-grid: rgba(148, 190, 211, 0.2);
+    --chart-label: #9FB4C3;
+    --tooltip-bg: #102A3D;
+    --tooltip-border: #24445A;
+    --tooltip-text: #F8FAFC;
     --on-gradient: #F8FAFC;
-    --action-overlay: linear-gradient(135deg, rgba(7, 26, 43, 0.96) 0%, rgba(7, 26, 43, 0.84) 52%, rgba(7, 26, 43, 0.52) 100%);
     --on-balance: #F8FAFC;
     --balance-muted: #E0F2FE;
     --balance-rule: rgba(255, 255, 255, 0.2);
@@ -104,15 +124,17 @@
   }
 
   .finance-gradient-action {
-    background: var(--action-overlay), var(--finance-gradient) !important;
+    background: var(--action-bg) !important;
+    background-image: none !important;
     border-color: transparent !important;
-    color: var(--on-gradient) !important;
-    box-shadow: 0 8px 20px -14px var(--shadow-color);
+    color: var(--on-action) !important;
+    box-shadow: 0 3px 8px -4px var(--shadow-color);
   }
 
   .finance-gradient-action:hover {
-    filter: saturate(1.08) brightness(1.03);
-    box-shadow: 0 16px 30px -16px var(--shadow-color);
+    background: var(--action-hover) !important;
+    filter: none;
+    box-shadow: 0 5px 12px -6px var(--shadow-color);
   }
 
   .finance-glass {
@@ -133,19 +155,19 @@
 :root:not(.dark) .bg-slate-100 { background-color: var(--surface-muted) !important; }
 :root:not(.dark) .border-slate-200, :root:not(.dark) .border-slate-100 { border-color: var(--border-color) !important; }
 :root:not(.dark) .bg-blue-50 { background-color: var(--accent-soft) !important; }
-:root:not(.dark) .bg-blue-600 { background-color: var(--accent) !important; }
-:root:not(.dark) .hover\\:bg-blue-700:hover { background-color: var(--accent-strong) !important; }
-:root:not(.dark) .text-blue-500, :root:not(.dark) .text-blue-600 { color: var(--accent) !important; }
+:root:not(.dark) .bg-blue-600 { background-color: var(--action-bg) !important; color: var(--on-action) !important; }
+:root:not(.dark) .hover\\:bg-blue-700:hover { background-color: var(--action-hover) !important; }
+:root:not(.dark) .text-blue-500, :root:not(.dark) .text-blue-600 { color: var(--accent-text) !important; }
 :root:not(.dark) .border-blue-500 { border-color: var(--accent) !important; }
 .dark [class~="dark:bg-slate-900"], .dark [class~="dark:bg-[#0E1626]"] { background-color: var(--card-bg) !important; }
 .dark [class~="dark:bg-slate-800"], .dark [class~="dark:bg-slate-800/60"], .dark [class~="dark:bg-slate-800/80"] { background-color: var(--surface-muted) !important; }
 .dark [class~="dark:border-slate-800"], .dark [class~="dark:border-slate-800/80"], .dark [class~="dark:border-slate-700"] { border-color: var(--border-color) !important; }
 .dark [class~="dark:text-slate-400"] { color: var(--text-muted) !important; }
 .dark [class~="dark:text-white"], .dark [class~="dark:text-slate-100"] { color: var(--text-main) !important; }
-.dark .bg-blue-600 { background-color: var(--accent) !important; }
+.dark .bg-blue-600 { background-color: var(--action-bg) !important; color: var(--on-action) !important; }
 .dark .bg-blue-50, .dark .bg-blue-950 { background-color: var(--accent-soft) !important; }
-.dark .hover\\:bg-blue-700:hover { background-color: var(--accent-strong) !important; }
-.dark .text-blue-500, .dark .text-blue-600 { color: var(--accent-strong) !important; }
+.dark .hover\\:bg-blue-700:hover { background-color: var(--action-hover) !important; }
+.dark .text-blue-500, .dark .text-blue-600 { color: var(--accent-text) !important; }
 .dark .border-blue-500 { border-color: var(--accent) !important; }
 
 button, input, select, textarea {

@@ -72,20 +72,20 @@ export const Preloader: React.FC<PreloaderProps> = ({
       role="status"
       aria-live="polite"
       aria-busy={!isExiting}
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 selection:bg-blue-500 selection:text-white transition-opacity duration-500 ease-out bg-slate-50/95 dark:bg-[#050816]/95 backdrop-blur-xl ${
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 selection:bg-sky-600 selection:text-white transition-opacity duration-500 ease-out bg-slate-50/95 dark:bg-[#071A2B]/95 backdrop-blur-xl ${
         isExiting ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
     >
       {/* Dynamic Ambient Radiant Glow behind central card */}
       <div
-        className={`absolute w-[280px] sm:w-[480px] h-[280px] sm:h-[380px] bg-blue-500/15 dark:bg-blue-600/20 rounded-full blur-3xl pointer-events-none transition-opacity duration-500 ${
+        className={`absolute w-[280px] sm:w-[480px] h-[280px] sm:h-[380px] bg-sky-500/[0.06] dark:bg-sky-400/[0.04] rounded-full blur-3xl pointer-events-none transition-opacity duration-500 ${
           isExiting ? 'opacity-0 scale-95' : 'animate-preloader-ambient'
         }`}
       />
 
       {/* Central Card Container: Enlarged dimensions, elegant rounded bounds, clean border & elevation */}
       <div
-        className={`relative w-full max-w-[620px] min-h-[340px] sm:min-h-[440px] mx-auto p-8 sm:p-14 rounded-3xl sm:rounded-[36px] bg-white/95 dark:bg-[#111827]/95 border border-slate-200/90 dark:border-slate-800/90 shadow-2xl shadow-blue-500/10 dark:shadow-black/70 flex flex-col items-center justify-center text-center transition-all duration-500 ease-out ${
+        className={`relative w-full max-w-[620px] min-h-[340px] sm:min-h-[440px] mx-auto p-8 sm:p-14 rounded-3xl sm:rounded-[36px] bg-white/95 dark:bg-[#0B2234]/95 border border-slate-200/90 dark:border-slate-800/90 shadow-xl shadow-sky-900/5 dark:shadow-black/30 flex flex-col items-center justify-center text-center transition-all duration-500 ease-out ${
           isExiting
             ? 'scale-[0.96] opacity-0 -translate-y-2'
             : 'scale-100 opacity-100 translate-y-0'
@@ -131,7 +131,7 @@ export const Preloader: React.FC<PreloaderProps> = ({
           }`}
         >
           <div className="h-2 sm:h-2.5 w-full bg-slate-100 dark:bg-slate-800/90 rounded-full overflow-hidden relative shadow-inner">
-            <div className="absolute inset-y-0 rounded-full bg-gradient-to-r from-blue-500 via-blue-400 to-white dark:from-blue-600 dark:via-blue-400 dark:to-white shadow-[0_0_12px_rgba(96,165,250,0.8)] animate-preloader-progress-smooth" />
+            <div className="absolute inset-y-0 rounded-full bg-gradient-to-r from-sky-700 via-sky-500 to-cyan-300 dark:from-sky-700 dark:via-sky-500 dark:to-cyan-300 animate-preloader-progress-smooth" />
           </div>
 
           <p className="mt-3 text-xs sm:text-sm font-medium tracking-wider text-slate-400 dark:text-slate-500 animate-pulse">

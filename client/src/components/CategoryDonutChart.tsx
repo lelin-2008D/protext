@@ -20,10 +20,10 @@ export const CategoryDonutChart: React.FC = () => {
     ? categoryTotals.map(c => ({
         name: c.name,
         value: c.amount,
-        color: c.color || '#3B82F6',
+        color: c.color || 'var(--accent)',
         percentage: c.percentage
       }))
-    : [{ name: 'No Expenses', value: 1, color: '#334155', percentage: 0 }];
+    : [{ name: 'No Expenses', value: 1, color: 'var(--border-color)', percentage: 0 }];
 
   return (
     <div className="rounded-2xl bg-white dark:bg-[#0E1626] border border-slate-200 dark:border-slate-800/80 p-5 shadow-sm">
@@ -55,10 +55,10 @@ export const CategoryDonutChart: React.FC = () => {
                 <Tooltip
                   formatter={(value: any) => [`Rs. ${Number(value || 0).toLocaleString('en-IN')}`, 'Spent']}
                   contentStyle={{
-                    backgroundColor: '#0F172A',
-                    borderColor: '#334155',
+                    backgroundColor: 'var(--tooltip-bg)',
+                    borderColor: 'var(--tooltip-border)',
                     borderRadius: '10px',
-                    color: '#fff',
+                    color: 'var(--tooltip-text)',
                     fontSize: '11px'
                   }}
                 />

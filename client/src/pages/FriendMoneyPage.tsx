@@ -92,7 +92,7 @@ export const FriendMoneyPage: React.FC = () => {
           {/* Friend Profile Card */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-blue-500/20">
+              <div className="w-12 h-12 rounded-2xl bg-sky-100 dark:bg-sky-950/60 text-sky-800 dark:text-sky-200 flex items-center justify-center font-bold text-lg">
                 {selectedFriend.name.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
@@ -295,33 +295,33 @@ export const FriendMoneyPage: React.FC = () => {
           </div>
 
           {/* Aggregated Grand Totals Banner */}
-          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-5 text-white shadow-lg shadow-blue-600/15">
-            <div className="flex items-center justify-between pb-3 border-b border-white/15">
-              <span className="text-xs font-semibold uppercase tracking-wider text-blue-100 flex items-center gap-1.5">
+          <div className="rounded-2xl border border-sky-200 bg-sky-50 p-5 shadow-sm dark:border-sky-900/60 dark:bg-sky-950/30">
+            <div className="flex items-center justify-between pb-3 border-b border-sky-200 dark:border-sky-900/60">
+              <span className="text-xs font-semibold uppercase tracking-wider text-sky-900 dark:text-sky-200 flex items-center gap-1.5">
                 <Banknote className="w-4 h-4" />
                 Total Outstanding Remaining
               </span>
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white/20 text-white">
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white dark:bg-sky-900/60 text-slate-700 dark:text-sky-100">
                 {friends.length} {friends.length === 1 ? 'Friend' : 'Friends'}
               </span>
             </div>
 
             <div className="mt-3">
-              <h3 className="text-2xl sm:text-3xl font-black tracking-tight">
+              <h3 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-950 dark:text-white">
                 Rs. {totals.remaining.toLocaleString('en-IN')}
               </h3>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mt-4 pt-3 border-t border-white/15 text-xs">
+            <div className="grid grid-cols-2 gap-4 mt-4 pt-3 border-t border-sky-200 dark:border-sky-900/60 text-xs">
               <div>
-                <p className="text-blue-200">Total Money Given</p>
-                <p className="font-bold text-sm sm:text-base text-white mt-0.5">
+                <p className="text-slate-600 dark:text-slate-300">Total Money Given</p>
+                <p className="font-bold text-sm sm:text-base text-amber-700 dark:text-amber-300 mt-0.5">
                   Rs. {totals.totalGiven.toLocaleString('en-IN')}
                 </p>
               </div>
               <div>
-                <p className="text-blue-200">Total Money Returned</p>
-                <p className="font-bold text-sm sm:text-base text-white mt-0.5">
+                <p className="text-slate-600 dark:text-slate-300">Total Money Returned</p>
+                <p className="font-bold text-sm sm:text-base text-emerald-700 dark:text-emerald-300 mt-0.5">
                   Rs. {totals.totalReturned.toLocaleString('en-IN')}
                 </p>
               </div>

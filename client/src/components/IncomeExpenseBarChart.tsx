@@ -75,11 +75,11 @@ export const IncomeExpenseBarChart: React.FC = () => {
           {/* Legend */}
           <div className="flex items-center gap-3 text-xs">
             <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 font-medium">
-              <span className="w-2.5 h-2.5 rounded-full bg-teal-400" />
+              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: 'var(--income-color)' }} />
               <span>Income</span>
             </span>
             <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 font-medium">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: 'var(--expense-color)' }} />
               <span>Expenses</span>
             </span>
           </div>
@@ -103,16 +103,16 @@ export const IncomeExpenseBarChart: React.FC = () => {
       <div className="h-64 w-full relative">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }} barGap={4}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid)" />
             <XAxis
               dataKey="name"
-              tick={{ fill: '#94A3B8', fontSize: 11 }}
+              tick={{ fill: 'var(--chart-label)', fontSize: 11 }}
               tickLine={false}
-              axisLine={{ stroke: '#334155', opacity: 0.2 }}
+              axisLine={{ stroke: 'var(--chart-grid)' }}
             />
             <YAxis
               tickFormatter={formatYAxis}
-              tick={{ fill: '#94A3B8', fontSize: 11 }}
+              tick={{ fill: 'var(--chart-label)', fontSize: 11 }}
               tickLine={false}
               axisLine={false}
             />
@@ -122,16 +122,16 @@ export const IncomeExpenseBarChart: React.FC = () => {
                 name === 'income' ? 'Income' : 'Expenses'
               ]}
               contentStyle={{
-                backgroundColor: '#0F172A',
-                borderColor: '#334155',
+                backgroundColor: 'var(--tooltip-bg)',
+                borderColor: 'var(--tooltip-border)',
                 borderRadius: '12px',
-                color: '#fff',
+                color: 'var(--tooltip-text)',
                 fontSize: '12px',
-                boxShadow: '0 10px 25px -5px rgba(0,0,0,0.5)'
+                boxShadow: '0 8px 22px -12px var(--shadow-color)'
               }}
             />
-            <Bar dataKey="income" fill="#14B8A6" radius={[4, 4, 0, 0]} maxBarSize={14} />
-            <Bar dataKey="expenses" fill="#3B82F6" radius={[4, 4, 0, 0]} maxBarSize={14} />
+            <Bar dataKey="income" fill="var(--income-color)" radius={[4, 4, 0, 0]} maxBarSize={14} />
+            <Bar dataKey="expenses" fill="var(--expense-color)" radius={[4, 4, 0, 0]} maxBarSize={14} />
           </BarChart>
         </ResponsiveContainer>
 

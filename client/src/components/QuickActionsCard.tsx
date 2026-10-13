@@ -63,7 +63,7 @@ export const QuickActionsCard: React.FC<QuickActionsCardProps> = ({
           className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-[#121E32]/70 hover:bg-slate-100 dark:hover:bg-[#152540] border border-slate-200 dark:border-slate-800/80 group transition-all text-left"
         >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-purple-500/15 text-purple-500 dark:text-purple-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300 flex items-center justify-center group-hover:scale-110 transition-transform">
               <ArrowLeftRight className="w-4 h-4 group-hover:animate-hisab-wave" />
             </div>
             <div>
@@ -71,7 +71,7 @@ export const QuickActionsCard: React.FC<QuickActionsCardProps> = ({
               <p className="text-[10px] text-slate-500 dark:text-slate-400">Track who owes what</p>
             </div>
           </div>
-          <ArrowLeftRight className="w-4 h-4 text-slate-400 group-hover:text-purple-400 transition" />
+          <ArrowLeftRight className="w-4 h-4 text-slate-400 group-hover:text-sky-600 dark:group-hover:text-sky-300 transition" />
         </button>
 
         {/* Shopping Planner Button */}

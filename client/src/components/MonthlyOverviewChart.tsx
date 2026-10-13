@@ -60,7 +60,7 @@ export const MonthlyOverviewChart: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 flex items-center justify-center">
+              <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
             <LineChart className="w-4 h-4" />
           </div>
           <h3 className="text-sm font-bold text-slate-900 dark:text-white">Monthly Overview</h3>
@@ -86,24 +86,24 @@ export const MonthlyOverviewChart: React.FC = () => {
           <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10B981" stopOpacity={0.35} />
-                <stop offset="95%" stopColor="#10B981" stopOpacity={0.0} />
+                <stop offset="5%" stopColor="var(--income-color)" stopOpacity={0.24} />
+                <stop offset="95%" stopColor="var(--income-color)" stopOpacity={0.0} />
               </linearGradient>
               <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.35} />
-                <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.0} />
+                <stop offset="5%" stopColor="var(--expense-color)" stopOpacity={0.24} />
+                <stop offset="95%" stopColor="var(--expense-color)" stopOpacity={0.0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid)" />
             <XAxis
               dataKey="day"
-              tick={{ fill: '#94A3B8', fontSize: 10 }}
+              tick={{ fill: 'var(--chart-label)', fontSize: 10 }}
               tickLine={false}
-              axisLine={{ stroke: '#334155', opacity: 0.2 }}
+              axisLine={{ stroke: 'var(--chart-grid)' }}
             />
             <YAxis
               tickFormatter={formatYAxis}
-              tick={{ fill: '#94A3B8', fontSize: 10 }}
+              tick={{ fill: 'var(--chart-label)', fontSize: 10 }}
               tickLine={false}
               axisLine={false}
             />
@@ -113,17 +113,17 @@ export const MonthlyOverviewChart: React.FC = () => {
                 name === 'income' ? 'Income' : 'Expenses'
               ]}
               contentStyle={{
-                backgroundColor: '#0F172A',
-                borderColor: '#334155',
+                backgroundColor: 'var(--tooltip-bg)',
+                borderColor: 'var(--tooltip-border)',
                 borderRadius: '10px',
-                color: '#fff',
+                color: 'var(--tooltip-text)',
                 fontSize: '11px'
               }}
             />
             <Area
               type="monotone"
               dataKey="income"
-              stroke="#10B981"
+              stroke="var(--income-color)"
               strokeWidth={2.5}
               fillOpacity={1}
               fill="url(#incomeGrad)"
@@ -131,7 +131,7 @@ export const MonthlyOverviewChart: React.FC = () => {
             <Area
               type="monotone"
               dataKey="expenses"
-              stroke="#3B82F6"
+              stroke="var(--expense-color)"
               strokeWidth={2.5}
               fillOpacity={1}
               fill="url(#expenseGrad)"
@@ -154,7 +154,7 @@ export const MonthlyOverviewChart: React.FC = () => {
           <span>Income</span>
         </span>
         <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 font-medium">
-          <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+          <span className="w-2.5 h-2.5 rounded-full bg-rose-700 dark:bg-rose-400" />
           <span>Expenses</span>
         </span>
       </div>
